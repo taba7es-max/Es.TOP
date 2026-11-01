@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ES TOP - مركز رفع الصور</title>
-<!-- مكتبات ضرورية -->
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -14,7 +13,6 @@
     --text:#0f172a; --text-2:#334155; --radius:16px;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
   }
   [data-theme="dark"]{
     --bg:#0f172a; --surface:#1e293b; --muted:#94a3b8; --line:#334155;
@@ -22,13 +20,12 @@
     --text:#f8fafc; --text-2:#cbd5e1;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,sans-serif}
   body{
     background:var(--bg); color:var(--text); min-height:100vh;
     display:flex; flex-direction:column; transition:background .3s, color .3s;
-    padding-top: 65px; /* مساحة للهيدر الثابت */
+    padding-top: 65px;
   }
 
   /* ================= Header ================= */
@@ -101,17 +98,10 @@
   }
   .sidebar-header h2 { font-size: 16px; font-weight: 800; color: var(--text); margin: 0; }
   
-  /* الأزرار العادية */
   .normal-actions { display: flex; align-items: center; gap: 6px; }
-  .btn-mini-pdf { 
-    background: #e11d48; color: #fff; border: none; padding: 5px 10px; 
-    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
-  }
+  .btn-mini-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-mini-pdf:hover { background: #be123c; }
-  .btn-mini-clear { 
-    background: transparent; border: 1px solid var(--red); color: var(--red); 
-    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
-  }
+  .btn-mini-clear { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-mini-clear:hover { background: var(--red); color: #fff; }
   .sidebar-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
   .sidebar-close:hover { color: var(--red); }
@@ -124,76 +114,63 @@
   .btn-sel-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
   .btn-sel-cancel { background: var(--bg); border: 1px solid var(--line); color: var(--text-2); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
 
-  /* منطقة التمرير */
-  .sidebar-content { 
-    flex: 1; 
-    overflow-y: auto; 
-    overflow-x: hidden;
-    padding: 20px; 
-    -webkit-overflow-scrolling: touch; /* لتحسين التمرير على iOS */
-  }
+  .sidebar-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; -webkit-overflow-scrolling: touch; }
 
   /* ================= Empty State ================= */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; text-align: center; padding: 20px; animation: fadeIn 0.5s ease;
-  }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px; animation: fadeIn 0.5s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .empty-state img { width: 160px; height: auto; margin-bottom: 20px; opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
   [data-theme="dark"] .empty-state img { opacity: 0.6; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)) invert(1); }
   .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 10px; font-weight: 800; }
   .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 250px; }
 
-  /* ================= History Items ================= */
+  /* ================= History Items (Same as Upload Preview) ================= */
   .history-item {
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 12px; padding: 12px; margin-bottom: 15px;
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: 10px; margin-bottom: 10px;
+    display: flex; flex-direction: column; gap: 8px;
     box-shadow: var(--shadow-sm); transition: all 0.2s;
-    user-select: none; /* لمنع تحديد النص أثناء الضغط المطول */
-    -webkit-user-select: none;
-  }
-  .history-item:hover { box-shadow: var(--shadow-md); }
-  
-  /* حالة التحديد */
-  .history-item.selected {
-    border-color: var(--primary);
-    background: rgba(37,99,235,0.05);
-    box-shadow: 0 0 0 2px var(--primary);
-  }
-
-  .history-img-container {
-    width: 100%; height: 180px; border-radius: 8px; overflow: hidden;
-    margin-bottom: 10px; border: 1px solid var(--line); cursor: pointer; background: var(--bg);
+    user-select: none; -webkit-user-select: none;
     position: relative;
   }
-  .history-img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-  .history-img-container:hover .history-img { transform: scale(1.05); }
+  .history-item:hover { border-color: var(--primary-2); }
+  .history-item.selected { border-color: var(--primary); background: rgba(37,99,235,0.05); box-shadow: 0 0 0 2px var(--primary); }
 
-  /* علامة التحديد (Checkmark) */
+  .history-header { display: flex; justify-content: space-between; align-items: center; }
+  .history-filename { font-size: 11px; font-weight: 700; color: var(--text-2); direction: ltr; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+  .history-date { font-size: 10px; color: var(--muted); }
+
+  .history-link-group { display: flex; gap: 6px; align-items: center; }
+  
+  /* الصورة المصغرة */
+  .history-img-container {
+    width: 44px; height: 44px; border-radius: 8px; overflow: hidden;
+    flex-shrink: 0; border: 1px solid var(--line); cursor: pointer; background: var(--surface);
+  }
+  .history-img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
+  .history-img-container:hover .history-img { transform: scale(1.15); }
+
+  /* حقل الرابط */
+  .history-link-input {
+    flex: 1; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 6px; background: var(--surface); color: var(--text); font-size: 11px; direction: ltr;
+    user-select: text; -webkit-user-select: text;
+  }
+
+  /* أزرار الإجراءات */
+  .action-buttons { display: flex; gap: 4px; }
+  .btn-mini-copy { background: rgba(37,99,235,0.1); color: var(--primary); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 11px; }
+  .btn-mini-copy:hover { background: var(--primary); color: #fff; }
+  .btn-mini-delete { background: rgba(239,68,68,0.1); color: var(--red); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 11px; }
+  .btn-mini-delete:hover { background: var(--red); color: #fff; }
+
   .selection-check {
-    position: absolute; top: 8px; right: 8px; width: 24px; height: 24px;
+    position: absolute; top: -5px; right: -5px; width: 20px; height: 20px;
     border-radius: 50%; background: var(--primary); color: #fff;
-    display: none; place-items: center; font-size: 14px; font-weight: bold;
+    display: none; place-items: center; font-size: 12px; font-weight: bold;
     box-shadow: var(--shadow-sm); z-index: 2;
   }
   .history-item.selected .selection-check { display: grid; }
-
-  .history-link-input {
-    font-size: 12px; padding: 8px 10px; width: 100%; border: 1px solid var(--line);
-    border-radius: 6px; background: var(--bg); color: var(--text); direction: ltr; margin-bottom: 8px;
-    user-select: text; /* السماح بتحديد النص في حقل الإدخال */
-  }
-  .history-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
-  
-  .action-buttons { display: flex; gap: 5px; }
-  .btn-mini-copy { background: rgba(37,99,235,0.1); color: var(--primary); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; transition: 0.2s;}
-  .btn-mini-copy:hover { background: var(--primary); color: #fff; }
-  .btn-mini-delete { background: rgba(239,68,68,0.1); color: var(--red); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; transition: 0.2s; }
-  .btn-mini-delete:hover { background: var(--red); color: #fff; }
-
-  /* إخفاء الأزرار في وضع التحديد */
-  .history-item.selected .action-buttons,
-  .history-item.selected .history-link-input { opacity: 0.5; pointer-events: none; }
 
   /* ================= Main Container ================= */
   .main-wrapper { flex: 1; padding: 30px 20px; display: flex; justify-content: center; }
@@ -202,10 +179,7 @@
     border-radius: var(--radius); padding: 30px; width: 100%; max-width: 850px; box-shadow: var(--shadow-md);
   }
 
-  h2.section-title {
-    font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
-    border-bottom: 2px solid var(--line); padding-bottom: 10px;
-  }
+  h2.section-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--line); padding-bottom: 10px; }
 
   .config-section { background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--line); }
   .config-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--primary); }
@@ -217,18 +191,11 @@
   .input-group input:focus { outline:none; border-color:var(--primary); }
   .btn-save { background:var(--green); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; margin-top:5px; }
 
-  .compression-toggle {
-    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px;
-    font-size: 13px; font-weight: 700; color: var(--text-2); cursor: pointer;
-    background: rgba(37, 99, 235, 0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--primary-2);
-  }
+  .compression-toggle { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: var(--text-2); cursor: pointer; background: rgba(37, 99, 235, 0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--primary-2); }
   .compression-toggle input { width: 18px; height: 18px; cursor: pointer; margin-top: 2px; }
   .compression-toggle .desc { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 4px; display: block; }
 
-  .drop-zone {
-    border: 2px dashed var(--primary); border-radius: var(--radius);
-    padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(37, 99, 235, 0.02);
-  }
+  .drop-zone { border: 2px dashed var(--primary); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(37, 99, 235, 0.02); }
   .drop-zone:hover, .drop-zone.dragover { background: rgba(37, 99, 235, 0.08); transform: scale(1.01); }
   .drop-zone .icon { font-size: 40px; margin-bottom: 10px; color: var(--primary); }
   .drop-zone .text { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -299,7 +266,6 @@
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="historySidebar">
   <div class="sidebar-header">
-    <!-- الشريط العادي -->
     <div id="normalHeader" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
       <h2>📜 السجل</h2>
       <div class="normal-actions">
@@ -308,7 +274,6 @@
         <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
       </div>
     </div>
-    <!-- شريط التحديد -->
     <div id="selectionHeader" class="selection-actions">
       <span class="sel-count" id="selCount">0 محدد</span>
       <div style="display:flex; gap:6px;">
@@ -392,20 +357,17 @@
     if (!sidebar.classList.contains('show')) cancelSelection();
   }
 
-  // بدء الضغط المطول
   function startPress(e, id) {
-    if (e.button && e.button !== 0) return; // فقط الزر الأيسر للماوس
+    if (e.button && e.button !== 0) return;
     isLongPressTriggered = false;
     longPressTimer = setTimeout(() => {
       isLongPressTriggered = true;
       if (!isSelectionMode) toggleSelectionMode(true);
       selectItem(id);
-      // اهتزاز خفيف للهاتف إن أمكن
       if (navigator.vibrate) navigator.vibrate(50);
-    }, 500); // نصف ثانية
+    }, 500);
   }
 
-  // إلغاء الضغط المطول (إذا رفع الإصبع قبل النصف ثانية)
   function cancelPress() {
     if (longPressTimer) {
       clearTimeout(longPressTimer);
@@ -413,11 +375,10 @@
     }
   }
 
-  // النقر العادي
   function handleItemClick(e, id) {
     if (isLongPressTriggered) {
       e.preventDefault();
-      return; // تم التعامل معه بواسطة الضغط المطول
+      return;
     }
     if (isSelectionMode) {
       selectItem(id);
@@ -431,21 +392,16 @@
     isSelectionMode = active;
     document.getElementById('normalHeader').style.display = active ? 'none' : 'flex';
     document.getElementById('selectionHeader').className = 'selection-actions ' + (active ? 'active' : '');
-    if (!active) {
-      selectedIds.clear();
-    }
+    if (!active) selectedIds.clear();
     renderHistory();
   }
 
   function selectItem(id) {
-    if (selectedIds.has(id)) {
-      selectedIds.delete(id);
-    } else {
-      selectedIds.add(id);
-    }
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
     
     if (selectedIds.size === 0) {
-      toggleSelectionMode(false); // إذا لم يتبق شيء محدد، اخرج من وضع التحديد
+      toggleSelectionMode(false);
     } else {
       document.getElementById('selCount').textContent = `${selectedIds.size} محدد`;
       renderHistory();
@@ -676,6 +632,7 @@
       return;
     }
     
+    // التصميم الجديد للسجل (نفس تصميم المعاينة بعد الرفع)
     list.innerHTML = history.map(item => {
       const isSel = selectedIds.has(item.id);
       return `
@@ -688,15 +645,19 @@
         
         <div class="selection-check">✓</div>
         
-        <div class="history-img-container">
-          <img src="${item.url}" class="history-img" alt="${item.name}">
+        <div class="history-header">
+          <span class="history-filename">${item.name}</span>
+          <span class="history-date">${item.date}</span>
         </div>
-        <input type="text" class="history-link-input" value="${item.url}" readonly onclick="event.stopPropagation(); this.select()">
-        <div class="history-meta">
-          <span>${item.date}</span>
+        
+        <div class="history-link-group">
+          <div class="history-img-container" onclick="event.stopPropagation(); openModal('${item.url}')">
+            <img src="${item.url}" class="history-img" alt="${item.name}">
+          </div>
+          <input type="text" class="history-link-input" value="${item.url}" readonly onclick="event.stopPropagation(); this.select()">
           <div class="action-buttons" onclick="event.stopPropagation()">
             <button class="btn-mini-copy" onclick="navigator.clipboard.writeText('${item.url}'); this.textContent='تم ✓'; setTimeout(()=>this.textContent='نسخ', 2000);">نسخ</button>
-            <button class="btn-mini-delete" onclick="deleteSingleImage(${item.id})">حذف 🗑️</button>
+            <button class="btn-mini-delete" onclick="deleteSingleImage(${item.id})">🗑️</button>
           </div>
         </div>
       </div>
@@ -713,7 +674,6 @@
 
     let deletedCount = 0;
     
-    // إظهار حالة التحميل في الأزرار
     const btnSel = document.querySelector('.btn-sel-delete');
     const btnClear = document.getElementById('btnClear');
     let originalText = '';
@@ -728,7 +688,6 @@
       let fileSha = item.sha;
       let filePath = item.path;
 
-      // جلب SHA إذا كانت الصورة قديمة
       if (config && (!fileSha || !filePath)) {
           try {
               const urlParts = item.url.split(`@${config.branch}/`);
@@ -754,11 +713,9 @@
       }
     }
 
-    // تحديث السجل المحلي
     const updatedHistory = history.filter(i => !idsToDelete.has(i.id));
     saveHistory(updatedHistory);
     
-    // إعادة تعيين واجهة المستخدم
     if (isSelectionMode && btnSel) { btnSel.textContent = originalText; btnSel.disabled = false; }
     else if (btnClear) { btnClear.textContent = originalText; btnClear.disabled = false; }
     
