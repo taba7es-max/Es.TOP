@@ -106,7 +106,6 @@
   .sidebar-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
   .sidebar-close:hover { color: var(--red); }
 
-  /* أزرار وضع التحديد */
   .selection-actions { display: none; align-items: center; gap: 6px; width: 100%; justify-content: space-between; }
   .selection-actions.active { display: flex; }
   .sel-count { font-size: 13px; font-weight: 800; color: var(--primary); }
@@ -142,7 +141,6 @@
 
   .history-link-group { display: flex; gap: 6px; align-items: center; }
   
-  /* الصورة المصغرة */
   .history-img-container {
     width: 44px; height: 44px; border-radius: 8px; overflow: hidden;
     flex-shrink: 0; border: 1px solid var(--line); cursor: pointer; background: var(--surface);
@@ -150,14 +148,12 @@
   .history-img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
   .history-img-container:hover .history-img { transform: scale(1.15); }
 
-  /* حقل الرابط */
   .history-link-input {
     flex: 1; padding: 8px 10px; border: 1px solid var(--line);
     border-radius: 6px; background: var(--surface); color: var(--text); font-size: 11px; direction: ltr;
     user-select: text; -webkit-user-select: text;
   }
 
-  /* أزرار الإجراءات */
   .action-buttons { display: flex; gap: 4px; }
   .btn-mini-copy { background: rgba(37,99,235,0.1); color: var(--primary); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 11px; }
   .btn-mini-copy:hover { background: var(--primary); color: #fff; }
@@ -500,7 +496,12 @@
 
     const totalFiles = files.length;
     const shouldCompress = document.getElementById('compressEnabled').checked;
-    const compOptions = { maxWidthOrHeight: undefined, initialQuality: 0.9, useWebWorker: true };
+    
+    // تم إصلاح إعدادات الضغط هنا (إزالة maxWidthOrHeight: undefined)
+    const compOptions = { 
+        initialQuality: 0.85, 
+        useWebWorker: false // تعطيل الـ Worker لضمان العمل على جميع المتصفحات بدون مشاكل CORS
+    };
 
     for (let i = 0; i < totalFiles; i++) {
       const originalFile = files[i];
@@ -523,17 +524,29 @@
 
       try {
         let fileToUpload = originalFile;
+        
         if (shouldCompress) {
           progressText.textContent = `جاري ضغط ${i + 1} من ${totalFiles}...`;
           try {
+            // التحقق من وجود المكتبة
+            if (typeof imageCompression === 'undefined') {
+                throw new Error("مكتبة الضغط غير محملة. تأكد من اتصالك بالإنترنت.");
+            }
+
             const compressedBlob = await imageCompression(originalFile, compOptions);
+            
             if (compressedBlob.size < originalFile.size) {
               fileToUpload = compressedBlob;
               document.getElementById(`status_${itemId}`).textContent = `تم توفير ${Math.round((originalFile.size - fileToUpload.size) / 1024)}KB`;
             } else {
               fileToUpload = originalFile;
+              document.getElementById(`status_${itemId}`).textContent = `الأصلي أصغر (بدون ضغط)`;
             }
-          } catch (e) { fileToUpload = originalFile; }
+          } catch (compError) {
+            console.error("Compression Error:", compError);
+            fileToUpload = originalFile;
+            document.getElementById(`status_${itemId}`).textContent = `فشل الضغط (تم رفع الأصلي)`;
+          }
         }
 
         document.getElementById(`status_${itemId}`).textContent = 'جاري الرفع...';
@@ -632,7 +645,6 @@
       return;
     }
     
-    // التصميم الجديد للسجل (نفس تصميم المعاينة بعد الرفع)
     list.innerHTML = history.map(item => {
       const isSel = selectedIds.has(item.id);
       return `
