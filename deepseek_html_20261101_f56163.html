@@ -25,10 +25,12 @@
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
   }
   *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,sans-serif}
+  
+  /* حل مشكلة التمرير: منع تمرير الصفحة الرئيسية عند فتح السجل */
   body{
     background:var(--bg); color:var(--text); min-height:100vh;
     display:flex; flex-direction:column; transition:background .3s, color .3s;
-    padding-top: 65px;
+    padding-top: 65px; overflow: hidden; /* هام لمنع التمرير المزدوج */
   }
 
   /* ================= Header ================= */
@@ -86,7 +88,8 @@
   .sidebar-overlay.show { opacity: 1; visibility: visible; }
 
   .sidebar {
-    position: fixed; top: 65px; right: -450px; width: 100%; max-width: 400px; height: calc(100vh - 65px);
+    position: fixed; top: 65px; right: -450px; width: 100%; max-width: 420px; 
+    height: calc(100vh - 65px); /* الارتفاع الدقيق */
     background: var(--surface); z-index: 999;
     transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1); 
     display: flex; flex-direction: column; box-shadow: -5px 0 25px rgba(0,0,0,0.15);
@@ -97,77 +100,82 @@
   .sidebar-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 15px 20px; border-bottom: 1px solid var(--line);
-    background: var(--surface);
+    background: var(--surface); flex-shrink: 0;
   }
   .sidebar-header h2 { font-size: 16px; font-weight: 800; color: var(--text); margin: 0; }
   
   .sidebar-actions-group { display: flex; align-items: center; gap: 6px; }
-  .btn-mini-pdf { 
-    background: #e11d48; color: #fff; border: none; padding: 5px 10px; 
-    border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
-  }
+  .btn-mini-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-mini-pdf:hover { background: #be123c; }
-  .btn-mini-clear { 
-    background: transparent; border: 1px solid var(--red); color: var(--red); 
-    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
-  }
+  .btn-mini-clear { background: transparent; border: 1px solid var(--red); color: var(--red); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-mini-clear:hover { background: var(--red); color: #fff; }
+  .btn-mini-select { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+  .btn-mini-select:hover { background: var(--primary); color: #fff; }
   .sidebar-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
   .sidebar-close:hover { color: var(--red); }
 
-  .sidebar-content { flex: 1; overflow-y: auto; padding: 20px; }
+  /* المحتوى القابل للتمرير */
+  .sidebar-content { flex: 1; overflow-y: auto; padding: 20px; position: relative; }
 
   /* ================= Empty State ================= */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; text-align: center; padding: 20px; animation: fadeIn 0.5s ease;
-  }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; animation: fadeIn 0.5s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .empty-state img { width: 160px; height: auto; margin-bottom: 20px; opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
   [data-theme="dark"] .empty-state img { opacity: 0.6; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)) invert(1); }
   .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 10px; font-weight: 800; }
   .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 250px; }
 
-  /* ================= History Items ================= */
+  /* ================= History Item (Matches Upload Result exactly) ================= */
   .history-item {
     background: var(--surface); border: 1px solid var(--line);
-    border-radius: 12px; padding: 12px; margin-bottom: 15px;
-    box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 10px; padding: 12px; margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    transition: all 0.2s; user-select: none; position: relative;
   }
-  .history-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  /* نمط وضع التحديد */
+  .history-item.selectable { cursor: pointer; }
+  .history-item.selected { border-color: var(--primary); background: rgba(37,99,235,0.05); box-shadow: 0 0 0 2px var(--primary); }
   
-  .history-img-container {
-    width: 100%; height: 150px; border-radius: 8px; overflow: hidden;
-    margin-bottom: 10px; border: 1px solid var(--line); cursor: pointer; background: var(--bg);
-  }
-  .history-img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-  .history-img-container:hover .history-img { transform: scale(1.05); }
+  .result-header { display:flex; justify-content:space-between; align-items:center; }
+  .result-filename { font-size:12px; font-weight:700; color:var(--text-2); direction:ltr; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
+  .history-date { font-size: 11px; color: var(--muted); }
 
-  .history-link-input {
-    font-size: 12px; padding: 8px 10px; width: 100%; border: 1px solid var(--line);
-    border-radius: 6px; background: var(--bg); color: var(--text); direction: ltr; margin-bottom: 8px;
-  }
-  .history-meta { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
+  .link-group { display:flex; gap:10px; align-items:center; }
+  .img-preview-container { width:44px; height:44px; border-radius:8px; overflow:hidden; background:var(--line); flex-shrink:0; border:1px solid var(--line); cursor: pointer;}
+  .img-preview-container img { width:100%; height:100%; object-fit:cover; transition: transform .3s; }
+  .img-preview-container:hover img { transform: scale(1.15); }
+  .link-input { flex:1; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font-size:12px; direction:ltr; }
   
-  .action-buttons { display: flex; gap: 5px; }
-  .btn-mini-copy { background: rgba(37,99,235,0.1); color: var(--primary); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; transition: 0.2s;}
-  .btn-mini-copy:hover { background: var(--primary); color: #fff; }
-  
-  /* زر الحذف الفردي */
-  .btn-mini-delete { background: rgba(239,68,68,0.1); color: var(--red); border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+  .btn-copy { background:var(--primary); color:#fff; border:none; padding:0 15px; border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:12px; height:40px; }
+  .btn-copy:hover { background:var(--primary-2); }
+  .btn-mini-delete { background: rgba(239,68,68,0.1); color: var(--red); border: none; padding: 0 12px; height: 40px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.2s; }
   .btn-mini-delete:hover { background: var(--red); color: #fff; }
+  
+  .selection-checkbox { display: none; width: 20px; height: 20px; border-radius: 4px; border: 2px solid var(--muted); margin-right: 10px; }
+  .history-item.selected .selection-checkbox { background: var(--primary); border-color: var(--primary); }
+  .history-item.selected .selection-checkbox::after { content: '✓'; color: #fff; display: block; text-align: center; font-size: 14px; line-height: 16px; }
+  
+  /* ================= Bulk Action Bar ================= */
+  .bulk-actions {
+    position: absolute; bottom: -100px; left: 0; right: 0; padding: 15px 20px;
+    background: var(--surface); border-top: 1px solid var(--line);
+    display: flex; gap: 10px; transition: bottom 0.3s ease; z-index: 10;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+  }
+  .bulk-actions.show { bottom: 0; }
+  .bulk-actions button { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; font-size: 13px; }
+  .btn-bulk-delete { background: var(--red); color: #fff; }
+  .btn-bulk-pdf { background: var(--primary); color: #fff; }
+  .btn-bulk-cancel { background: var(--bg); color: var(--text); border: 1px solid var(--line) !important; flex: 0.5 !important; }
 
   /* ================= Main Container ================= */
-  .main-wrapper { flex: 1; padding: 30px 20px; display: flex; justify-content: center; }
+  .main-wrapper { flex: 1; overflow-y: auto; padding: 30px 20px; display: flex; justify-content: center; }
   .container {
     background: var(--surface); border: 1px solid var(--line);
-    border-radius: var(--radius); padding: 30px; width: 100%; max-width: 850px; box-shadow: var(--shadow-md);
+    border-radius: var(--radius); padding: 30px; width: 100%; max-width: 850px; box-shadow: var(--shadow-md); height: fit-content;
   }
 
-  h2.section-title {
-    font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
-    border-bottom: 2px solid var(--line); padding-bottom: 10px;
-  }
+  h2.section-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--line); padding-bottom: 10px; }
 
   .config-section { background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--line); }
   .config-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--primary); }
@@ -179,18 +187,11 @@
   .input-group input:focus { outline:none; border-color:var(--primary); }
   .btn-save { background:var(--green); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; margin-top:5px; }
 
-  .compression-toggle {
-    display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px;
-    font-size: 13px; font-weight: 700; color: var(--text-2); cursor: pointer;
-    background: rgba(37, 99, 235, 0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--primary-2);
-  }
+  .compression-toggle { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: var(--text-2); cursor: pointer; background: rgba(37, 99, 235, 0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--primary-2); }
   .compression-toggle input { width: 18px; height: 18px; cursor: pointer; margin-top: 2px; }
   .compression-toggle .desc { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 4px; display: block; }
 
-  .drop-zone {
-    border: 2px dashed var(--primary); border-radius: var(--radius);
-    padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(37, 99, 235, 0.02);
-  }
+  .drop-zone { border: 2px dashed var(--primary); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(37, 99, 235, 0.02); }
   .drop-zone:hover, .drop-zone.dragover { background: rgba(37, 99, 235, 0.08); transform: scale(1.01); }
   .drop-zone .icon { font-size: 40px; margin-bottom: 10px; color: var(--primary); }
   .drop-zone .text { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -203,22 +204,12 @@
 
   .results-container { display:none; margin-top:20px; }
   .result-item { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px; }
-  .result-header { display:flex; justify-content:space-between; align-items:center; }
-  .result-filename { font-size:12px; font-weight:700; color:var(--text-2); direction:ltr; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:60%; }
   .result-status { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; }
   .status-success { background:rgba(16,185,129,.1); color:var(--green); }
   .status-error { background:rgba(239,68,68,.1); color:var(--red); }
   .status-compressing { background:rgba(245,158,11,.1); color:#f59e0b; }
 
-  .link-group { display:flex; gap:10px; align-items:center; }
-  .img-preview-container { width:44px; height:44px; border-radius:8px; overflow:hidden; background:var(--line); flex-shrink:0; border:1px solid var(--line); cursor: pointer;}
-  .img-preview-container img { width:100%; height:100%; object-fit:cover; transition: transform .3s; }
-  .img-preview-container:hover img { transform: scale(1.15); }
-  .link-input { flex:1; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text); font-size:13px; direction:ltr; }
-  .btn-copy { background:var(--primary); color:#fff; border:none; padding:0 20px; border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:13px; height:40px; }
-  .btn-copy:hover { background:var(--primary-2); }
-
-  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); margin-top: auto; }
+  footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); }
   footer strong { color: var(--primary); }
 
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:2000; justify-content:center; align-items:center; opacity:0; transition:opacity .3s; backdrop-filter:blur(5px); }
@@ -229,7 +220,6 @@
 
   @media (max-width: 600px) {
     .header-btn .btn-text { display: none; } 
-    .header-btn { padding: 8px 10px; }
     .sidebar { max-width: 100%; right: -100%; }
   }
 </style>
@@ -262,13 +252,21 @@
 <aside class="sidebar" id="historySidebar">
   <div class="sidebar-header">
     <h2>📜 السجل</h2>
-    <div class="sidebar-actions-group">
+    <div class="sidebar-actions-group" id="sidebarHeaderActions">
       <button class="btn-mini-pdf" onclick="exportPDF()">PDF</button>
       <button class="btn-mini-clear" id="btnClear" onclick="clearHistory()">مسح الكل</button>
+      <button class="btn-mini-select" onclick="enterSelectionMode()">تحديد</button>
       <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
     </div>
   </div>
   <div class="sidebar-content" id="historyList"></div>
+  
+  <!-- شريط أدوات التحديد المتعدد (يظهر في الأسفل) -->
+  <div class="bulk-actions" id="bulkActions">
+    <button class="btn-bulk-cancel" onclick="exitSelectionMode()">إلغاء</button>
+    <button class="btn-bulk-pdf" onclick="exportSelectedPDF()">تصدير (0)</button>
+    <button class="btn-bulk-delete" onclick="deleteSelectedImages()">حذف (0)</button>
+  </div>
 </aside>
 
 <div class="main-wrapper">
@@ -314,11 +312,10 @@
     </div>
 
   </div>
+  <footer>
+    جميع الحقوق محفوظة &copy; <span id="year"></span> <strong>ES Solutions</strong>
+  </footer>
 </div>
-
-<footer>
-  جميع الحقوق محفوظة &copy; <span id="year"></span> <strong>ES Solutions</strong>
-</footer>
 
 <div class="modal-overlay" id="imageModal" onclick="closeModal(event)">
   <button class="modal-close" onclick="closeModal(event)">✕</button>
@@ -327,13 +324,18 @@
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
+  
+  // متغيرات وضع التحديد
+  let isSelectionMode = false;
+  let selectedIds = new Set();
+  let longPressTimer;
 
   function toggleSidebar() {
     const sidebar = document.getElementById('historySidebar');
     const overlay = document.getElementById('sidebarOverlay');
     sidebar.classList.toggle('show');
     overlay.classList.toggle('show');
-    document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
+    if(!sidebar.classList.contains('show')) exitSelectionMode(); // إلغاء التحديد عند الإغلاق
   }
 
   function initTheme() {
@@ -352,13 +354,10 @@
     if (!src) return;
     document.getElementById('modalImage').src = src;
     document.getElementById('imageModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
   }
   function closeModal(e) {
     if (e) e.stopPropagation();
     document.getElementById('imageModal').classList.remove('show');
-    const sidebar = document.getElementById('historySidebar');
-    if(!sidebar.classList.contains('show')) document.body.style.overflow = '';
   }
 
   function toggleConfig() {
@@ -511,13 +510,13 @@
     input.select();
     navigator.clipboard.writeText(input.value).then(() => {
       const originalText = btn.textContent;
-      btn.textContent = 'تم النسخ ✓';
+      btn.textContent = 'تم ✓';
       btn.style.background = 'var(--green)';
       setTimeout(() => { btn.textContent = originalText; btn.style.background = 'var(--primary)'; }, 2000);
     });
   }
 
-  // ================= History Logic =================
+  // ================= History & Selection Logic =================
   function getHistory() {
     try { return JSON.parse(localStorage.getItem('es_top_history') || '[]'); } catch(e) { return []; }
   }
@@ -525,15 +524,11 @@
     localStorage.setItem('es_top_history', JSON.stringify(history));
   }
   
-  // إضافة عنصر للسجل (تم تحسين الـ ID ليكون فريداً 100%)
   function addToHistory(name, url, path, sha) {
     const history = getHistory();
     history.unshift({ 
-        id: Date.now() + Math.floor(Math.random() * 1000), // ID فريد
-        name, 
-        url, 
-        path, 
-        sha,  
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name, url, path, sha,  
         date: new Date().toLocaleString('ar-EG') 
     });
     if(history.length > 50) history.pop();
@@ -556,111 +551,155 @@
       return;
     }
     
-    list.innerHTML = history.map(item => `
-      <div class="history-item">
-        <div class="history-img-container" onclick="openModal('${item.url}')">
-          <img src="${item.url}" class="history-img" alt="${item.name}">
+    // المعاينة مطابقة تماماً لنتيجة الرفع
+    list.innerHTML = history.map(item => {
+      const isSelected = selectedIds.has(item.id);
+      return `
+      <div class="history-item ${isSelectionMode ? 'selectable' : ''} ${isSelected ? 'selected' : ''}" 
+           id="history_${item.id}"
+           onmousedown="startPress(event, ${item.id})" 
+           onmouseup="cancelPress()" 
+           onmouseleave="cancelPress()"
+           ontouchstart="startPress(event, ${item.id})" 
+           ontouchend="cancelPress()"
+           onclick="handleItemClick(event, ${item.id})">
+        
+        <div class="result-header">
+          <span class="result-filename">${item.name}</span>
+          <span class="history-date">${item.date}</span>
         </div>
-        <input type="text" class="history-link-input" value="${item.url}" readonly onclick="this.select()">
-        <div class="history-meta">
-          <span>${item.date}</span>
-          <div class="action-buttons">
-            <button class="btn-mini-copy" onclick="navigator.clipboard.writeText('${item.url}'); this.textContent='تم ✓'; setTimeout(()=>this.textContent='نسخ', 2000);">نسخ</button>
-            <button class="btn-mini-delete" onclick="deleteSingleImage(${item.id})">حذف 🗑️</button>
+        <div class="link-group">
+          <div class="img-preview-container" onclick="event.stopPropagation(); openModal('${item.url}')">
+            <img src="${item.url}" alt="${item.name}">
           </div>
+          <input type="text" class="link-input" value="${item.url}" readonly onclick="event.stopPropagation(); this.select()">
+          <div class="selection-checkbox"></div>
+          <button class="btn-copy" onclick="event.stopPropagation(); copyLink(this)">نسخ</button>
+          ${!isSelectionMode ? `<button class="btn-mini-delete" onclick="event.stopPropagation(); deleteSingleImage(${item.id})">🗑️</button>` : ''}
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
-  // ================= حذف صورة واحدة =================
+  // --- دوال التحديد ---
+  function startPress(e, id) {
+    if (isSelectionMode) return;
+    longPressTimer = setTimeout(() => {
+      enterSelectionMode();
+      toggleSelection(id);
+    }, 600); // 600ms للضغط المطول
+  }
+  function cancelPress() {
+    clearTimeout(longPressTimer);
+  }
+
+  function handleItemClick(e, id) {
+    if (isSelectionMode) {
+      e.preventDefault();
+      toggleSelection(id);
+    }
+  }
+
+  function enterSelectionMode() {
+    if (isSelectionMode) return;
+    isSelectionMode = true;
+    selectedIds.clear();
+    renderHistory();
+    document.getElementById('bulkActions').classList.add('show');
+    updateBulkActionsBar();
+  }
+
+  function exitSelectionMode() {
+    isSelectionMode = false;
+    selectedIds.clear();
+    renderHistory();
+    document.getElementById('bulkActions').classList.remove('show');
+  }
+
+  function toggleSelection(id) {
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      selectedIds.add(id);
+    }
+    
+    // تحديث الواجهة فقط بدون إعادة رسم كاملة
+    const el = document.getElementById(`history_${id}`);
+    if (el) el.classList.toggle('selected', selectedIds.has(id));
+    updateBulkActionsBar();
+    
+    if (selectedIds.size === 0) exitSelectionMode();
+  }
+
+  function updateBulkActionsBar() {
+    const count = selectedIds.size;
+    document.querySelector('.btn-bulk-pdf').textContent = `تصدير (${count})`;
+    document.querySelector('.btn-bulk-delete').textContent = `حذف (${count})`;
+  }
+
+  // --- حذف متعدد ---
+  async function deleteSelectedImages() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`هل أنت متأكد من حذف ${selectedIds.size} صورة من السجل ومن GitHub؟`)) return;
+
+    const configStr = localStorage.getItem('gh_config');
+    if (!configStr) { alert('لا توجد إعدادات GitHub.'); return; }
+    const config = JSON.parse(configStr);
+    
+    const history = getHistory();
+    const toDelete = history.filter(i => selectedIds.has(i.id));
+    
+    let deletedCount = 0;
+
+    for (let item of toDelete) {
+        let fileSha = item.sha, filePath = item.path;
+        
+        // جلب SHA إذا كانت قديمة
+        if (!fileSha || !filePath) {
+            try {
+                const urlParts = item.url.split(`@${config.branch}/`);
+                if (urlParts.length === 2) {
+                    filePath = urlParts[1];
+                    const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}?ref=${config.branch}`;
+                    const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${config.token}` }});
+                    if (getRes.ok) { const getData = await getRes.json(); fileSha = getData.sha; }
+                }
+            } catch (e) {}
+        }
+
+        if (fileSha && filePath) {
+            try {
+                const deleteUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`;
+                const res = await fetch(deleteUrl, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `Delete ${item.name}`, sha: fileSha, branch: config.branch })
+                });
+                if (res.ok) deletedCount++;
+            } catch (e) {}
+        }
+    }
+
+    // إزالة من السجل
+    const remainingHistory = history.filter(i => !selectedIds.has(i.id));
+    saveHistory(remainingHistory);
+    exitSelectionMode();
+    renderHistory();
+    alert(`تم حذف ${deletedCount} صورة بنجاح.`);
+  }
+
+  // --- حذف فردي ---
   async function deleteSingleImage(id) {
     if(!confirm('هل أنت متأكد من حذف هذه الصورة من السجل ومن مستودع GitHub؟')) return;
-
     const history = getHistory();
     const item = history.find(i => i.id === id);
     if(!item) return;
 
     const configStr = localStorage.getItem('gh_config');
-    let deletedFromGitHub = false;
-
     if (configStr) {
       const config = JSON.parse(configStr);
-      let fileSha = item.sha;
-      let filePath = item.path;
-
-      // في حال كانت الصورة قديمة ولا تحتوي على SHA
-      if (!fileSha || !filePath) {
-          try {
-              const urlParts = item.url.split(`@${config.branch}/`);
-              if (urlParts.length === 2) {
-                  filePath = urlParts[1];
-                  const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}?ref=${config.branch}`;
-                  const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${config.token}` }});
-                  if (getRes.ok) {
-                      const getData = await getRes.json();
-                      fileSha = getData.sha;
-                  }
-              }
-          } catch (e) { console.error("خطأ في جلب بيانات الملف:", e); }
-      }
-
-      if (fileSha && filePath) {
-          try {
-              const deleteUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`;
-              const res = await fetch(deleteUrl, {
-                  method: 'DELETE',
-                  headers: {
-                      'Authorization': `token ${config.token}`,
-                      'Accept': 'application/vnd.github.v3+json',
-                      'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                      message: `Delete ${item.name}`,
-                      sha: fileSha,
-                      branch: config.branch
-                  })
-              });
-              if (res.ok) deletedFromGitHub = true;
-              else alert('فشل الحذف من GitHub. قد تكون الصورة محذوفة بالفعل.');
-          } catch (e) { console.error(e); }
-      }
-    } else {
-      alert('تنبيه: سيتم الحذف من السجل المحلي فقط لعدم وجود إعدادات GitHub.');
-    }
-
-    // إزالة الصورة من السجل المحلي
-    const updatedHistory = history.filter(i => i.id !== id);
-    saveHistory(updatedHistory);
-    renderHistory();
-  }
-
-  // ================= مسح السجل بالكامل =================
-  async function clearHistory() {
-    const history = getHistory();
-    if(history.length === 0) return;
-
-    if(!confirm('⚠️ تنبيه هام:\nهل أنت متأكد من مسح السجل بالكامل؟\nسيتم حذف جميع الصور نهائياً من مستودع GitHub أيضاً!')) return;
-
-    const configStr = localStorage.getItem('gh_config');
-    if (!configStr) {
-      localStorage.removeItem('es_top_history');
-      renderHistory();
-      alert('تم مسح السجل المحلي فقط (لم يتم حذف الصور من المستودع لعدم وجود إعدادات).');
-      return;
-    }
-
-    const config = JSON.parse(configStr);
-    const btn = document.getElementById('btnClear');
-    const originalText = btn.textContent;
-    btn.textContent = 'جاري المسح...';
-    btn.disabled = true;
-
-    let deletedCount = 0;
-
-    for (let item of history) {
-      let fileSha = item.sha;
-      let filePath = item.path;
+      let fileSha = item.sha, filePath = item.path;
 
       if (!fileSha || !filePath) {
           try {
@@ -677,37 +716,87 @@
       if (fileSha && filePath) {
           try {
               const deleteUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`;
-              const res = await fetch(deleteUrl, {
+              await fetch(deleteUrl, {
                   method: 'DELETE',
                   headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
                   body: JSON.stringify({ message: `Delete ${item.name}`, sha: fileSha, branch: config.branch })
               });
-              if (res.ok) deletedCount++;
           } catch (e) {}
       }
     }
 
-    localStorage.removeItem('es_top_history');
+    const updatedHistory = history.filter(i => i.id !== id);
+    saveHistory(updatedHistory);
     renderHistory();
-    btn.textContent = originalText;
-    btn.disabled = false;
-    alert(`تم مسح السجل وحذف ${deletedCount} صورة نهائياً.`);
   }
 
-  renderHistory(); 
+  // --- مسح الكل ---
+  async function clearHistory() {
+    const history = getHistory();
+    if(history.length === 0) return;
+    if(!confirm('⚠️ هل أنت متأكد من مسح السجل بالكامل وحذف الصور من GitHub؟')) return;
 
-  // ================= PDF =================
+    const configStr = localStorage.getItem('gh_config');
+    if (!configStr) { localStorage.removeItem('es_top_history'); renderHistory(); return; }
+    const config = JSON.parse(configStr);
+    const btn = document.getElementById('btnClear');
+    btn.textContent = 'جاري المسح...'; btn.disabled = true;
+
+    let deletedCount = 0;
+    for (let item of history) {
+      let fileSha = item.sha, filePath = item.path;
+      if (!fileSha || !filePath) {
+          try {
+              const urlParts = item.url.split(`@${config.branch}/`);
+              if (urlParts.length === 2) {
+                  filePath = urlParts[1];
+                  const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}?ref=${config.branch}`;
+                  const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${config.token}` }});
+                  if (getRes.ok) { const getData = await getRes.json(); fileSha = getData.sha; }
+              }
+          } catch (e) {}
+      }
+      if (fileSha && filePath) {
+          try {
+              await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`, {
+                  method: 'DELETE',
+                  headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ message: `Delete ${item.name}`, sha: fileSha, branch: config.branch })
+              });
+              deletedCount++;
+          } catch (e) {}
+      }
+    }
+    localStorage.removeItem('es_top_history');
+    renderHistory();
+    btn.textContent = 'مسح الكل'; btn.disabled = false;
+  }
+
+  // ================= PDF Export =================
+  // تصدير الكل
   function exportPDF() {
     const history = getHistory();
     if(history.length === 0) { alert('لا يوجد صور في السجل لتصديرها!'); return; }
+    generatePDF(history);
+  }
 
+  // تصدير المحدد فقط
+  function exportSelectedPDF() {
+    if (selectedIds.size === 0) return;
+    const history = getHistory();
+    const toExport = history.filter(i => selectedIds.has(i.id));
+    generatePDF(toExport);
+    exitSelectionMode();
+  }
+
+  function generatePDF(data) {
     const printContainer = document.createElement('div');
     printContainer.style.padding = '20px';
     printContainer.style.background = '#fff';
     printContainer.style.color = '#000';
     printContainer.style.fontFamily = 'Tahoma, sans-serif';
     printContainer.innerHTML = `
-      <h2 style="text-align:center; margin-bottom:5px;">ES TOP - سجل الصور المرفوعة</h2>
+      <h2 style="text-align:center; margin-bottom:5px;">ES TOP - سجل الصور</h2>
       <p style="text-align:center; font-size:12px; color:#555; margin-bottom:20px;">تم التوليد بواسطة ES Solutions - التاريخ: ${new Date().toLocaleDateString('ar-EG')}</p>
       <table style="width:100%; border-collapse:collapse; font-size:12px;">
         <thead>
@@ -718,7 +807,7 @@
           </tr>
         </thead>
         <tbody>
-          ${history.map(item => `
+          ${data.map(item => `
             <tr>
               <td style="padding:5px; border:1px solid #ddd; text-align:center;">
                 <img src="${item.url}" crossorigin="anonymous" style="width:40px; height:40px; object-fit:cover; border-radius:4px;">
@@ -732,15 +821,17 @@
     `;
 
     const opt = {
-      margin:       10,
-      filename:     `ES-TOP-Images-${Date.now()}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true }, 
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      margin: 10,
+      filename: `ES-TOP-Images-${Date.now()}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true }, 
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
     html2pdf().set(opt).from(printContainer).save();
   }
+
+  renderHistory(); 
 </script>
 </body>
   </html>
