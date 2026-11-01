@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مركز رفع الصور - GitHub to jsDelivr</title>
+<title>مركز رفع الصور المتعدد - GitHub to jsDelivr</title>
 <style>
   :root{
     --bg:#f7f8fc; --surface:#ffffff; --muted:#737a8c; --line:#ebedf3;
@@ -18,17 +18,18 @@
   *{box-sizing:border-box;margin:0;padding:0;font-family:"Segoe UI",Tahoma,sans-serif}
   body{
     background:var(--bg); color:var(--text); padding:20px; min-height:100vh;
-    display:flex; justify-content:center; align-items:center;
+    display:flex; justify-content:center; align-items:flex-start;
     transition:background .3s, color .3s;
   }
   .container{
     background:var(--surface); border:1px solid var(--line);
-    border-radius:var(--radius); padding:30px; width:100%; max-width:600px;
-    box-shadow:0 10px 30px rgba(0,0,0,.05);
+    border-radius:var(--radius); padding:30px; width:100%; max-width:700px;
+    box-shadow:0 10px 30px rgba(0,0,0,.05); margin-top: 40px;
   }
   h1{font-size:22px; margin-bottom:8px; text-align:center; color:var(--text)}
   p.subtitle{text-align:center; color:var(--muted); font-size:13px; margin-bottom:25px}
 
+  /* Config Section */
   .config-section{
     background:var(--bg); padding:15px; border-radius:10px;
     margin-bottom:20px; border:1px dashed var(--line);
@@ -46,7 +47,12 @@
     background:var(--surface); color:var(--text); font-size:13px;
   }
   .input-group input:focus{outline:none; border-color:var(--primary)}
+  .btn-save{
+    background:var(--green); color:#fff; border:none; padding:10px; 
+    border-radius:8px; font-weight:700; cursor:pointer; margin-top:5px;
+  }
 
+  /* Drop Zone */
   .drop-zone{
     border:2px dashed var(--primary); border-radius:var(--radius);
     padding:40px 20px; text-align:center; cursor:pointer;
@@ -59,40 +65,53 @@
   .drop-zone .text{font-size:14px; font-weight:700; color:var(--text)}
   .drop-zone .hint{font-size:12px; color:var(--muted); margin-top:5px}
 
+  /* Overall Progress */
+  .overall-progress{
+    display:none; margin-top:20px; padding:15px;
+    background:var(--bg); border-radius:10px;
+  }
+  .progress-text{font-size:12px; font-weight:700; margin-bottom:8px; color:var(--text-2)}
   .progress-bar{
-    height:4px; background:var(--line); border-radius:4px;
-    margin-top:20px; overflow:hidden; display:none;
+    height:6px; background:var(--line); border-radius:6px; overflow:hidden;
   }
   .progress-fill{
-    height:100%; width:0%; background:var(--primary);
+    height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--primary-2));
     transition:width .3s;
   }
 
-  .result-box{
-    display:none; margin-top:20px; padding:15px;
-    background:var(--bg); border-radius:10px; border:1px solid var(--green);
-  }
-  .result-box.error{border-color:var(--red)}
-  .result-title{font-size:13px; font-weight:700; margin-bottom:10px; color:var(--green)}
-  .result-box.error .result-title{color:var(--red)}
+  /* Results List */
+  .results-container{display:none; margin-top:20px;}
+  .results-title{font-size:14px; font-weight:700; margin-bottom:10px; color:var(--green); display:flex; justify-content:space-between;}
   
-  .link-group{display:flex; gap:8px; margin-bottom:10px}
+  .result-item{
+    background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;
+  }
+  .result-item.error{border-color:var(--red); background:rgba(239, 68, 68, 0.05);}
+  
+  .result-header{display:flex; justify-content:space-between; align-items:center;}
+  .result-filename{font-size:12px; font-weight:700; color:var(--text-2); direction:ltr;}
+  .result-status{font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px;}
+  .status-success{background:rgba(16, 185, 129, 0.1); color:var(--green);}
+  .status-error{background:rgba(239, 68, 68, 0.1); color:var(--red);}
+  
+  .link-group{display:flex; gap:8px}
   .link-input{
-    flex:1; padding:10px; border:1px solid var(--line); border-radius:8px;
+    flex:1; padding:8px; border:1px solid var(--line); border-radius:8px;
     background:var(--surface); color:var(--text); font-size:12px; direction:ltr;
   }
   .btn-copy{
     background:var(--primary); color:#fff; border:none; padding:0 15px;
-    border-radius:8px; cursor:pointer; font-weight:700; transition:.2s;
+    border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:12px;
   }
   .btn-copy:hover{background:var(--primary-2)}
 
-  /* Toggle Theme */
+  /* Utilities */
   .theme-toggle{
     position:fixed; top:20px; left:20px; background:var(--surface);
     border:1px solid var(--line); color:var(--text); width:40px; height:40px;
     border-radius:50%; cursor:pointer; font-size:18px;
-    box-shadow:0 4px 10px rgba(0,0,0,.1);
+    box-shadow:0 4px 10px rgba(0,0,0,.1); z-index:100;
   }
 </style>
 </head>
@@ -101,8 +120,8 @@
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
 <div class="container">
-  <h1>مركز رفع الصور</h1>
-  <p class="subtitle">ارفع صورتك مباشرة إلى GitHub واحصل على رابط سريع عبر jsDelivr</p>
+  <h1>مركز رفع الصور المتعدد</h1>
+  <p class="subtitle">ارفع عدة صور دفعة واحدة إلى GitHub واحصل على روابط jsDelivr</p>
 
   <!-- الإعدادات -->
   <div class="config-section">
@@ -126,37 +145,35 @@
       <div class="input-group">
         <label>Personal Access Token (مفتاح الوصول)</label>
         <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" dir="ltr">
-        <span style="font-size:11px; color:var(--muted); margin-top:3px;">
-          * سيتم حفظ هذه البيانات في متصفحك فقط.
-        </span>
       </div>
-      <button onclick="saveConfig()" style="background:var(--green); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; margin-top:5px;">
-        حفظ الإعدادات
-      </button>
+      <button class="btn-save" onclick="saveConfig()">حفظ الإعدادات</button>
     </div>
   </div>
 
   <!-- منطقة الرفع -->
   <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
     <div class="icon">☁️</div>
-    <div class="text">اسحب الصورة هنا أو اضغط للاختيار</div>
-    <div class="hint">PNG, JPG, WEBP - حتى 5 ميجابايت</div>
+    <div class="text">اسحب الصور هنا أو اضغط للاختيار (يمكنك اختيار عدة صور)</div>
+    <div class="hint">PNG, JPG, WEBP - حتى 5 ميجابايت للصورة</div>
   </div>
-  <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+  <!-- تم إضافة كلمة multiple هنا -->
+  <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
 
-  <!-- شريط التحميل -->
-  <div class="progress-bar" id="progressBar">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
-
-  <!-- النتيجة -->
-  <div class="result-box" id="resultBox">
-    <div class="result-title" id="resultTitle">تم الرفع بنجاح! 🎉</div>
-    <div class="link-group">
-      <input type="text" class="link-input" id="finalLink" readonly>
-      <button class="btn-copy" onclick="copyLink()">نسخ</button>
+  <!-- شريط التحميل الكلي -->
+  <div class="overall-progress" id="overallProgress">
+    <div class="progress-text" id="progressText">جاري الرفع...</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
     </div>
-    <div style="font-size:12px; color:var(--muted);" id="resultDetails"></div>
+  </div>
+
+  <!-- النتائج -->
+  <div class="results-container" id="resultsContainer">
+    <div class="results-title">
+      <span>النتائج</span>
+      <span id="successCount" style="color:var(--muted); font-size:12px;"></span>
+    </div>
+    <div id="resultsList"></div>
   </div>
 </div>
 
@@ -214,115 +231,161 @@
   dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault(); dropZone.classList.remove('dragover');
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
   });
 
-  // --- Upload Logic ---
-  async function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) {
-      alert('الرجاء اختيار صورة صالحة'); return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert('حجم الصورة يتجاوز 5 ميجابايت'); return;
-    }
+  // --- Multi-File Upload Logic ---
+  async function handleFiles(files) {
+    if (!files.length) return;
 
     const configStr = localStorage.getItem('gh_config');
     if (!configStr) {
-      alert('الرجاء إدخال إعدادات GitHub أولاً من القسم العلوي.');
+      alert('الرجاء إدخال إعدادات GitHub أولاً.');
       document.getElementById('configBody').classList.add('show');
       return;
     }
     const config = JSON.parse(configStr);
     if (!config.user || !config.repo || !config.token) {
-      alert('بيانات الإعدادات غير مكتملة. تأكد من إدخال اسم المستخدم، المستودع، والتوكن.');
+      alert('بيانات الإعدادات غير مكتملة.');
       return;
     }
 
-    // Show progress
-    const progressBar = document.getElementById('progressBar');
+    // Prepare UI
+    const overallProgress = document.getElementById('overallProgress');
     const progressFill = document.getElementById('progressFill');
-    const resultBox = document.getElementById('resultBox');
-    progressBar.style.display = 'block';
-    progressFill.style.width = '20%';
-    resultBox.style.display = 'none';
+    const progressText = document.getElementById('progressText');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsList = document.getElementById('resultsList');
+    
+    overallProgress.style.display = 'block';
+    resultsContainer.style.display = 'block';
+    resultsList.innerHTML = ''; // Clear previous results
+    progressFill.style.width = '0%';
 
-    try {
-      // Convert file to Base64
-      const base64Data = await readFileAsBase64(file);
-      progressFill.style.width = '50%';
+    let successCount = 0;
+    const totalFiles = files.length;
 
-      // Generate unique filename to avoid conflicts
-      const ext = file.name.split('.').pop();
-      const timestamp = Date.now();
-      const safeName = `img_${timestamp}.${ext}`;
-      const path = `images/${safeName}`; // Saves to an 'images' folder in repo
+    // Loop through all files
+    for (let i = 0; i < totalFiles; i++) {
+      const file = files[i];
+      
+      progressText.textContent = `جاري رفع ${i + 1} من ${totalFiles}: ${file.name}`;
+      
+      // Create result item placeholder
+      const itemId = `result_${i}`;
+      resultsList.insertAdjacentHTML('beforeend', `
+        <div class="result-item" id="${itemId}">
+          <div class="result-header">
+            <span class="result-filename">${file.name}</span>
+            <span class="result-status" style="background:var(--line); color:var(--muted)">جاري الرفع...</span>
+          </div>
+          <div class="link-group" style="display:none;">
+            <input type="text" class="link-input" readonly>
+            <button class="btn-copy" onclick="copyLink(this)">نسخ</button>
+          </div>
+        </div>
+      `);
 
-      // GitHub API Call
-      const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
-      const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${config.token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Upload image ${safeName}`,
-          content: base64Data,
-          branch: config.branch
-        })
-      });
-
-      progressFill.style.width = '80%';
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'فشل الرفع. تأكد من صحة التوكن والصلاحيات.');
+      // Validate size
+      if (file.size > 5 * 1024 * 1024) {
+        updateItemError(itemId, 'حجم الصورة يتجاوز 5 ميجابايت');
+        continue;
       }
 
-      // Success! Generate jsDelivr Link
-      progressFill.style.width = '100%';
-      const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${path}`;
-      
-      setTimeout(() => {
-        progressBar.style.display = 'none';
-        resultBox.style.display = 'block';
-        resultBox.classList.remove('error');
-        document.getElementById('resultTitle').textContent = 'تم الرفع بنجاح! 🎉';
-        document.getElementById('finalLink').value = jsdelivrUrl;
-        document.getElementById('resultDetails').innerHTML = `مسار الملف في المستودع: <code style="direction:ltr">${path}</code>`;
-      }, 500);
+      try {
+        // Convert to Base64
+        const base64Data = await readFileAsBase64(file);
 
-    } catch (error) {
-      progressBar.style.display = 'none';
-      resultBox.style.display = 'block';
-      resultBox.classList.add('error');
-      document.getElementById('resultTitle').textContent = 'حدث خطأ أثناء الرفع ❌';
-      document.getElementById('finalLink').value = '';
-      document.getElementById('resultDetails').textContent = error.message;
+        // Generate unique filename
+        const ext = file.name.split('.').pop();
+        const timestamp = Date.now();
+        const safeName = `img_${timestamp}_${i}.${ext}`;
+        const path = `images/${safeName}`;
+
+        // API Call
+        const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
+        const response = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${config.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `Upload image ${safeName}`,
+            content: base64Data,
+            branch: config.branch
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'فشل الرفع');
+        }
+
+        // Success
+        successCount++;
+        const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${path}`;
+        updateItemSuccess(itemId, jsdelivrUrl);
+
+      } catch (error) {
+        updateItemError(itemId, error.message);
+      }
+
+      // Update overall progress
+      const percent = Math.round(((i + 1) / totalFiles) * 100);
+      progressFill.style.width = `${percent}%`;
     }
+
+    // Done
+    progressText.textContent = `اكتمل الرفع!`;
+    document.getElementById('successCount').textContent = `${successCount} من ${totalFiles} بنجاح`;
+    
+    // Reset file input
+    document.getElementById('fileInput').value = '';
   }
 
-  // Helper: File to Base64 (without the data URI prefix)
+  // Helpers for UI updates
+  function updateItemSuccess(itemId, url) {
+    const item = document.getElementById(itemId);
+    item.classList.remove('error');
+    const status = item.querySelector('.result-status');
+    status.textContent = 'تم الرفع ✓';
+    status.className = 'result-status status-success';
+    
+    const linkGroup = item.querySelector('.link-group');
+    linkGroup.style.display = 'flex';
+    linkGroup.querySelector('input').value = url;
+  }
+
+  function updateItemError(itemId, msg) {
+    const item = document.getElementById(itemId);
+    item.classList.add('error');
+    const status = item.querySelector('.result-status');
+    status.textContent = 'فشل ✕';
+    status.className = 'result-status status-error';
+    
+    const linkGroup = item.querySelector('.link-group');
+    linkGroup.style.display = 'flex';
+    linkGroup.querySelector('input').value = msg;
+    linkGroup.querySelector('.btn-copy').style.display = 'none'; // Hide copy for errors
+  }
+
   function readFileAsBase64(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => {
-        const base64String = reader.result.split(',')[1];
-        resolve(base64String);
-      };
+      reader.onload = () => resolve(reader.result.split(',')[1]);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   }
 
-  // Copy to Clipboard
-  function copyLink() {
-    const linkInput = document.getElementById('finalLink');
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(linkInput.value).then(() => {
-      const btn = document.querySelector('.btn-copy');
+  function copyLink(btn) {
+    const input = btn.previousElementSibling;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value).then(() => {
       const originalText = btn.textContent;
       btn.textContent = 'تم النسخ ✓';
       btn.style.background = 'var(--green)';
