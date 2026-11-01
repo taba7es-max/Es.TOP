@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مركز رفع الصور المتعدد - GitHub to jsDelivr</title>
+<title>مركز رفع الصور الاحترافي - GitHub to jsDelivr</title>
 <style>
   :root{
     --bg:#f7f8fc; --surface:#ffffff; --muted:#737a8c; --line:#ebedf3;
@@ -23,7 +23,7 @@
   }
   .container{
     background:var(--surface); border:1px solid var(--line);
-    border-radius:var(--radius); padding:30px; width:100%; max-width:700px;
+    border-radius:var(--radius); padding:30px; width:100%; max-width:750px;
     box-shadow:0 10px 30px rgba(0,0,0,.05); margin-top: 40px;
   }
   h1{font-size:22px; margin-bottom:8px; text-align:center; color:var(--text)}
@@ -85,7 +85,8 @@
   
   .result-item{
     background:var(--bg); border:1px solid var(--line); border-radius:10px;
-    padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;
+    padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;
+    transition:all 0.3s ease;
   }
   .result-item.error{border-color:var(--red); background:rgba(239, 68, 68, 0.05);}
   
@@ -95,16 +96,57 @@
   .status-success{background:rgba(16, 185, 129, 0.1); color:var(--green);}
   .status-error{background:rgba(239, 68, 68, 0.1); color:var(--red);}
   
-  .link-group{display:flex; gap:8px}
+  /* Link & Image Group */
+  .link-group{display:flex; gap:10px; align-items:center;}
+  
+  .img-preview-container {
+    width: 44px; height: 44px; border-radius: 8px;
+    overflow: hidden; background: var(--line);
+    flex-shrink: 0; cursor: pointer; position: relative;
+    border: 1px solid var(--line);
+  }
+  .img-preview-container img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.3s ease, filter 0.3s;
+  }
+  .img-preview-container:hover img {
+    transform: scale(1.15);
+  }
+  .img-preview-container.uploading img {
+    filter: blur(2px) grayscale(100%); opacity: 0.7;
+  }
+  
   .link-input{
-    flex:1; padding:8px; border:1px solid var(--line); border-radius:8px;
-    background:var(--surface); color:var(--text); font-size:12px; direction:ltr;
+    flex:1; padding:10px; border:1px solid var(--line); border-radius:8px;
+    background:var(--surface); color:var(--text); font-size:13px; direction:ltr;
+    width: 100%;
   }
   .btn-copy{
-    background:var(--primary); color:#fff; border:none; padding:0 15px;
-    border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:12px;
+    background:var(--primary); color:#fff; border:none; padding:0 20px;
+    border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:13px;
+    height: 40px; flex-shrink: 0;
   }
   .btn-copy:hover{background:var(--primary-2)}
+
+  /* Modal for full preview */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center;
+    opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(5px);
+  }
+  .modal-overlay.show { display: flex; opacity: 1; }
+  .modal-content {
+    max-width: 90%; max-height: 90vh; border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: contain;
+    transform: scale(0.95); transition: transform 0.3s ease;
+  }
+  .modal-overlay.show .modal-content { transform: scale(1); }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px; color: #fff;
+    font-size: 30px; cursor: pointer; background: none; border: none;
+    line-height: 1; opacity: 0.7; transition: opacity 0.2s;
+  }
+  .modal-close:hover { opacity: 1; }
 
   /* Utilities */
   .theme-toggle{
@@ -119,9 +161,15 @@
 
 <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
 
+<!-- Modal for Image Preview -->
+<div class="modal-overlay" id="imageModal" onclick="closeModal(event)">
+  <button class="modal-close" onclick="closeModal(event)">✕</button>
+  <img src="" id="modalImage" class="modal-content" alt="Full Preview">
+</div>
+
 <div class="container">
-  <h1>مركز رفع الصور المتعدد</h1>
-  <p class="subtitle">ارفع عدة صور دفعة واحدة إلى GitHub واحصل على روابط jsDelivr</p>
+  <h1>مركز رفع الصور الاحترافي</h1>
+  <p class="subtitle">ارفع عدة صور، عاينها، واحصل على روابط CDN سريعة</p>
 
   <!-- الإعدادات -->
   <div class="config-section">
@@ -153,10 +201,9 @@
   <!-- منطقة الرفع -->
   <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
     <div class="icon">☁️</div>
-    <div class="text">اسحب الصور هنا أو اضغط للاختيار (يمكنك اختيار عدة صور)</div>
-    <div class="hint">PNG, JPG, WEBP - حتى 5 ميجابايت للصورة</div>
+    <div class="text">اسحب الصور هنا أو اضغط للاختيار</div>
+    <div class="hint">يمكنك اختيار عدة صور دفعة واحدة (حتى 5 ميجابايت للصورة)</div>
   </div>
-  <!-- تم إضافة كلمة multiple هنا -->
   <input type="file" id="fileInput" accept="image/*" multiple style="display:none" onchange="handleFiles(this.files)">
 
   <!-- شريط التحميل الكلي -->
@@ -192,6 +239,20 @@
     document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
   }
   initTheme();
+
+  // --- Modal Logic ---
+  function openModal(src) {
+    if (!src) return;
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+  }
+  function closeModal(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('imageModal').classList.remove('show');
+    document.body.style.overflow = '';
+    setTimeout(() => { document.getElementById('modalImage').src = ''; }, 300);
+  }
 
   // --- Config Handling ---
   function toggleConfig() {
@@ -259,20 +320,22 @@
     
     overallProgress.style.display = 'block';
     resultsContainer.style.display = 'block';
-    resultsList.innerHTML = ''; // Clear previous results
+    resultsList.innerHTML = ''; // Clear previous
     progressFill.style.width = '0%';
 
     let successCount = 0;
     const totalFiles = files.length;
 
-    // Loop through all files
     for (let i = 0; i < totalFiles; i++) {
       const file = files[i];
       
       progressText.textContent = `جاري رفع ${i + 1} من ${totalFiles}: ${file.name}`;
       
-      // Create result item placeholder
-      const itemId = `result_${i}`;
+      // Create local preview URL
+      const localPreviewUrl = URL.createObjectURL(file);
+
+      // Create result item
+      const itemId = `result_${Date.now()}_${i}`;
       resultsList.insertAdjacentHTML('beforeend', `
         <div class="result-item" id="${itemId}">
           <div class="result-header">
@@ -280,8 +343,11 @@
             <span class="result-status" style="background:var(--line); color:var(--muted)">جاري الرفع...</span>
           </div>
           <div class="link-group" style="display:none;">
-            <input type="text" class="link-input" readonly>
-            <button class="btn-copy" onclick="copyLink(this)">نسخ</button>
+            <div class="img-preview-container uploading" onclick="openModal('${localPreviewUrl}')" title="اضغط للمعاينة">
+              <img src="${localPreviewUrl}" alt="preview">
+            </div>
+            <input type="text" class="link-input" readonly placeholder="جاري التجهيز...">
+            <button class="btn-copy" onclick="copyLink(this)" disabled style="opacity:0.5">نسخ</button>
           </div>
         </div>
       `);
@@ -293,16 +359,11 @@
       }
 
       try {
-        // Convert to Base64
         const base64Data = await readFileAsBase64(file);
-
-        // Generate unique filename
         const ext = file.name.split('.').pop();
-        const timestamp = Date.now();
-        const safeName = `img_${timestamp}_${i}.${ext}`;
+        const safeName = `img_${Date.now()}_${i}.${ext}`;
         const path = `images/${safeName}`;
 
-        // API Call
         const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
         const response = await fetch(apiUrl, {
           method: 'PUT',
@@ -324,39 +385,54 @@
           throw new Error(data.message || 'فشل الرفع');
         }
 
-        // Success
         successCount++;
         const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${path}`;
+        
+        // Update UI on success
         updateItemSuccess(itemId, jsdelivrUrl);
 
       } catch (error) {
         updateItemError(itemId, error.message);
       }
 
-      // Update overall progress
       const percent = Math.round(((i + 1) / totalFiles) * 100);
       progressFill.style.width = `${percent}%`;
     }
 
-    // Done
     progressText.textContent = `اكتمل الرفع!`;
     document.getElementById('successCount').textContent = `${successCount} من ${totalFiles} بنجاح`;
-    
-    // Reset file input
     document.getElementById('fileInput').value = '';
   }
 
-  // Helpers for UI updates
   function updateItemSuccess(itemId, url) {
     const item = document.getElementById(itemId);
-    item.classList.remove('error');
     const status = item.querySelector('.result-status');
     status.textContent = 'تم الرفع ✓';
     status.className = 'result-status status-success';
     
     const linkGroup = item.querySelector('.link-group');
     linkGroup.style.display = 'flex';
-    linkGroup.querySelector('input').value = url;
+    
+    // Update Preview to final hosted URL (Optional, but ensures CDN works)
+    const previewContainer = item.querySelector('.img-preview-container');
+    const img = item.querySelector('.img-preview-container img');
+    
+    // Change click event to open the real URL
+    previewContainer.onclick = () => openModal(url);
+    previewContainer.title = 'اضغط للمعاينة الكاملة';
+    
+    // We replace the local blob with the real CDN link. 
+    // If you want instant load, keep local blob. But to verify the CDN, we use url.
+    img.src = url; 
+    previewContainer.classList.remove('uploading');
+
+    // Update Input and Button
+    const input = item.querySelector('.link-input');
+    input.value = url;
+    
+    const btn = item.querySelector('.btn-copy');
+    btn.disabled = false;
+    btn.style.opacity = '1';
   }
 
   function updateItemError(itemId, msg) {
@@ -368,8 +444,17 @@
     
     const linkGroup = item.querySelector('.link-group');
     linkGroup.style.display = 'flex';
-    linkGroup.querySelector('input').value = msg;
-    linkGroup.querySelector('.btn-copy').style.display = 'none'; // Hide copy for errors
+    
+    const previewContainer = item.querySelector('.img-preview-container');
+    previewContainer.classList.remove('uploading');
+    previewContainer.style.opacity = '0.5';
+    previewContainer.onclick = null;
+    
+    const input = item.querySelector('.link-input');
+    input.value = msg;
+    input.style.color = 'var(--red)';
+    
+    item.querySelector('.btn-copy').style.display = 'none';
   }
 
   function readFileAsBase64(file) {
@@ -397,4 +482,4 @@
   }
 </script>
 </body>
-</html>
+  </html>
