@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ES TOP - مركز رفع الصور</title>
-<!-- مكتبة ضغط الصور -->
+<!-- مكتبات ضرورية -->
 <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
-<!-- مكتبة تصدير PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
@@ -29,7 +28,7 @@
   body{
     background:var(--bg); color:var(--text); min-height:100vh;
     display:flex; flex-direction:column; transition:background .3s, color .3s;
-    padding-top: 65px;
+    padding-top: 65px; /* مساحة للهيدر الثابت */
   }
 
   /* ================= Header ================= */
@@ -95,7 +94,6 @@
   }
   .sidebar.show { right: 0; }
 
-  /* هيدر السجل: العنوان يمين والأزرار يسار */
   .sidebar-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 15px 20px; border-bottom: 1px solid var(--line);
@@ -103,23 +101,18 @@
   }
   .sidebar-header h2 { font-size: 16px; font-weight: 800; color: var(--text); margin: 0; }
   
-  .sidebar-actions-group {
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  /* أزرار صغيرة جداً */
+  /* الأزرار على الجانب المقابل */
+  .sidebar-actions-group { display: flex; align-items: center; gap: 6px; }
   .btn-mini-pdf { 
     background: #e11d48; color: #fff; border: none; padding: 5px 10px; 
     border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
   }
   .btn-mini-pdf:hover { background: #be123c; }
-  
   .btn-mini-clear { 
     background: transparent; border: 1px solid var(--red); color: var(--red); 
     padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; 
   }
   .btn-mini-clear:hover { background: var(--red); color: #fff; }
-
   .sidebar-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
   .sidebar-close:hover { color: var(--red); }
 
@@ -128,15 +121,10 @@
   /* ================= Empty State ================= */
   .empty-state {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    height: 100%; text-align: center; padding: 20px;
-    animation: fadeIn 0.5s ease;
+    height: 100%; text-align: center; padding: 20px; animation: fadeIn 0.5s ease;
   }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  
-  .empty-state img {
-    width: 160px; height: auto; margin-bottom: 20px; opacity: 0.8;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
-  }
+  .empty-state img { width: 160px; height: auto; margin-bottom: 20px; opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
   [data-theme="dark"] .empty-state img { opacity: 0.6; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)) invert(1); }
   .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 10px; font-weight: 800; }
   .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 250px; }
@@ -267,18 +255,15 @@
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar" id="historySidebar">
-  <!-- الهيدر المعدل: العنوان في اليمين والأزرار في اليسار -->
   <div class="sidebar-header">
     <h2>📜 السجل</h2>
     <div class="sidebar-actions-group">
       <button class="btn-mini-pdf" onclick="exportPDF()">PDF</button>
-      <button class="btn-mini-clear" onclick="clearHistory()">مسح</button>
+      <button class="btn-mini-clear" id="btnClear" onclick="clearHistory()">مسح</button>
       <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
     </div>
   </div>
-  <div class="sidebar-content" id="historyList">
-    <!-- سيتم توليد السجل هنا -->
-  </div>
+  <div class="sidebar-content" id="historyList"></div>
 </aside>
 
 <div class="main-wrapper">
@@ -338,6 +323,7 @@
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
 
+  // ================= Sidebar =================
   function toggleSidebar() {
     const sidebar = document.getElementById('historySidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -346,6 +332,7 @@
     document.body.style.overflow = sidebar.classList.contains('show') ? 'hidden' : '';
   }
 
+  // ================= Theme =================
   function initTheme() {
     const saved = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
@@ -358,6 +345,7 @@
   }
   initTheme();
 
+  // ================= Modal =================
   function openModal(src) {
     if (!src) return;
     document.getElementById('modalImage').src = src;
@@ -371,6 +359,7 @@
     if(!sidebar.classList.contains('show')) document.body.style.overflow = '';
   }
 
+  // ================= Config =================
   function toggleConfig() {
     document.getElementById('configBody').classList.toggle('show');
     document.getElementById('configArrow').textContent = document.getElementById('configBody').classList.contains('show') ? '▲' : '▼';
@@ -398,6 +387,7 @@
   }
   loadConfig();
 
+  // ================= Drag & Drop =================
   const dropZone = document.getElementById('dropZone');
   dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
   dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
@@ -406,6 +396,7 @@
     if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
   });
 
+  // ================= Upload Logic =================
   async function handleFiles(files) {
     if (!files.length) return;
     const configStr = localStorage.getItem('gh_config');
@@ -428,7 +419,6 @@
     resultsList.innerHTML = '';
     progressFill.style.width = '0%';
 
-    let successCount = 0;
     const totalFiles = files.length;
     const shouldCompress = document.getElementById('compressEnabled').checked;
     const compOptions = { maxWidthOrHeight: undefined, initialQuality: 0.9, useWebWorker: true };
@@ -483,7 +473,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'فشل الرفع');
 
-        successCount++;
+        // نجاح الرفع
         const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${path}`;
         
         document.getElementById(`status_${itemId}`).textContent = 'تم الرفع ✓';
@@ -496,7 +486,8 @@
         group.querySelector('.img-preview-container').onclick = () => openModal(jsdelivrUrl);
         group.querySelector('img').src = jsdelivrUrl;
 
-        addToHistory(originalFile.name, jsdelivrUrl);
+        // حفظ في السجل مع مسار الملف والـ SHA (ضروري للحذف)
+        addToHistory(originalFile.name, jsdelivrUrl, data.content.path, data.content.sha);
 
       } catch (error) {
         document.getElementById(`status_${itemId}`).textContent = 'فشل ✕';
@@ -529,15 +520,25 @@
     });
   }
 
+  // ================= History Logic =================
   function getHistory() {
     try { return JSON.parse(localStorage.getItem('es_top_history') || '[]'); } catch(e) { return []; }
   }
   function saveHistory(history) {
     localStorage.setItem('es_top_history', JSON.stringify(history));
   }
-  function addToHistory(name, url) {
+  
+  // إضافة عنصر للسجل مع حفظ الـ SHA والمسار
+  function addToHistory(name, url, path, sha) {
     const history = getHistory();
-    history.unshift({ id: Date.now(), name, url, date: new Date().toLocaleString('ar-EG') });
+    history.unshift({ 
+        id: Date.now(), 
+        name, 
+        url, 
+        path, // مسار الملف في المستودع
+        sha,  // بصمة الملف (لحذفه لاحقاً)
+        date: new Date().toLocaleString('ar-EG') 
+    });
     if(history.length > 50) history.pop();
     saveHistory(history);
     renderHistory();
@@ -571,15 +572,98 @@
       </div>
     `).join('');
   }
-  
-  function clearHistory() {
-    if(confirm('هل أنت متأكد من مسح سجل العمليات بالكامل؟')) {
+
+  // ================= مسح السجل وحذف الملفات من GitHub =================
+  async function clearHistory() {
+    const history = getHistory();
+    if(history.length === 0) return;
+
+    if(!confirm('⚠️ تنبيه هام:\nهل أنت متأكد من مسح السجل؟\nسيتم حذف جميع الصور نهائياً من مستودع GitHub أيضاً!')) return;
+
+    const configStr = localStorage.getItem('gh_config');
+    
+    // إذا لم تكن هناك إعدادات، نقوم بمسح السجل المحلي فقط
+    if (!configStr) {
       localStorage.removeItem('es_top_history');
       renderHistory();
+      alert('تم مسح السجل المحلي فقط (لم يتم حذف الصور من المستودع لعدم وجود إعدادات).');
+      return;
+    }
+
+    const config = JSON.parse(configStr);
+    const btn = document.getElementById('btnClear');
+    const originalText = btn.textContent;
+    btn.textContent = 'جاري المسح...';
+    btn.disabled = true;
+
+    let deletedCount = 0;
+    let failCount = 0;
+
+    for (let item of history) {
+      let fileSha = item.sha;
+      let filePath = item.path;
+
+      // إذا كانت الصورة قديمة ولا تحتوي على SHA (تم رفعها بالكود السابق)
+      // سنستخرج المسار من الرابط ونبحث عن الـ SHA عبر API
+      if (!fileSha || !filePath) {
+          try {
+              const urlParts = item.url.split(`@${config.branch}/`);
+              if (urlParts.length === 2) {
+                  filePath = urlParts[1];
+                  // جلب معلومات الملف للحصول على SHA
+                  const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}?ref=${config.branch}`;
+                  const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${config.token}` }});
+                  if (getRes.ok) {
+                      const getData = await getRes.json();
+                      fileSha = getData.sha;
+                  }
+              }
+          } catch (e) { console.error("خطأ في جلب بيانات الملف القديم:", e); }
+      }
+
+      // إرسال طلب الحذف لـ GitHub
+      if (fileSha && filePath) {
+          try {
+              const deleteUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${filePath}`;
+              const res = await fetch(deleteUrl, {
+                  method: 'DELETE',
+                  headers: {
+                      'Authorization': `token ${config.token}`,
+                      'Accept': 'application/vnd.github.v3+json',
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      message: `Delete ${item.name}`,
+                      sha: fileSha,
+                      branch: config.branch
+                  })
+              });
+              if (res.ok) deletedCount++;
+              else failCount++;
+          } catch (e) {
+              console.error(e);
+              failCount++;
+          }
+      }
+    }
+
+    // مسح السجل المحلي بعد الانتهاء
+    localStorage.removeItem('es_top_history');
+    renderHistory();
+    
+    btn.textContent = originalText;
+    btn.disabled = false;
+    
+    if(failCount > 0) {
+        alert(`تم مسح السجل. تم حذف ${deletedCount} صورة بنجاح، وفشل حذف ${failCount} صورة (قد تكون محذوفة مسبقاً).`);
+    } else {
+        alert(`تم مسح السجل وحذف ${deletedCount} صورة نهائياً من المستودع.`);
     }
   }
+
   renderHistory(); 
 
+  // ================= PDF Logic =================
   function exportPDF() {
     const history = getHistory();
     if(history.length === 0) { alert('لا يوجد صور في السجل لتصديرها!'); return; }
@@ -626,4 +710,4 @@
   }
 </script>
 </body>
-  </html>
+        </html>
