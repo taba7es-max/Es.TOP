@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ES TOP - مركز رفع الصور</title>
-<!-- تم تغيير مصدر المكتبة وإضافة معالج خطأ -->
-<script src="https://unpkg.com/browser-image-compression@2.0.2/dist/browser-image-compression.js" onerror="alert('تعذر تحميل مكتبة الضغط من الإنترنت. سيتم استخدام نظام الضغط الاحتياطي.')"></script>
+<!-- مكتبة تصدير PDF فقط (مستقرة ولا تؤثر على الرفع) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
@@ -293,10 +292,10 @@
         <span id="configArrow">▼</span>
       </div>
       <div class="config-body" id="configBody">
-        <div class="input-group"><label>GitHub Username</label><input type="text" id="ghUser" placeholder="taba7es-max" dir="ltr"></div>
-        <div class="input-group"><label>Repository Name</label><input type="text" id="ghRepo" placeholder="Es.TOP" dir="ltr"></div>
-        <div class="input-group"><label>Branch</label><input type="text" id="ghBranch" value="main" dir="ltr"></div>
-        <div class="input-group"><label>Personal Access Token</label><input type="password" id="ghToken" placeholder="ghp_xxxx..." dir="ltr"></div>
+        <div class="input-group"><label>GitHub Username (اسم المستخدم)</label><input type="text" id="ghUser" placeholder="taba7es-max" dir="ltr"></div>
+        <div class="input-group"><label>Repository Name (اسم المستودع)</label><input type="text" id="ghRepo" placeholder="Es.TOP" dir="ltr"></div>
+        <div class="input-group"><label>Branch (الفرع، عادة main)</label><input type="text" id="ghBranch" value="main" dir="ltr"></div>
+        <div class="input-group"><label>Personal Access Token (التوكن)</label><input type="password" id="ghToken" placeholder="ghp_xxxx..." dir="ltr"></div>
         <button class="btn-save" onclick="saveConfig()">حفظ الإعدادات</button>
       </div>
     </div>
@@ -305,7 +304,7 @@
       <input type="checkbox" id="compressEnabled" checked>
       <div>
         🗜️ تفعيل الضغط الذكي (بدون تغيير الأبعاد)
-        <span class="desc">تنظيف البيانات المخفية وضغط غير مرئي للعين لتقليل المساحة.</span>
+        <span class="desc">ضغط مدمج 100% يعمل بدون إنترنت لتقليل المساحة.</span>
       </div>
     </label>
 
@@ -338,6 +337,13 @@
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
+
+  // تنبيه إذا تم فتح الملف محلياً
+  if (window.location.protocol === 'file:') {
+      setTimeout(() => {
+          alert('تنبيه هام: أنت تفتح هذا الملف مباشرة من جهازك. لكي تعمل الأداة بشكل صحيح (خاصة الرفع)، يجب رفعها على GitHub Pages أو تشغيلها عبر خادم محلي (Local Server).');
+      }, 1000);
+  }
 
   // ================= State & Selection Logic =================
   let isSelectionMode = false;
@@ -464,29 +470,45 @@
   }
   loadConfig();
 
-  // ================= Native Canvas Fallback Compressor =================
-  async function compressWithCanvas(file, quality = 0.7) {
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = event => {
-              const img = new Image();
-              img.src = event.target.result;
-              img.onload = () => {
-                  const canvas = document.createElement('canvas');
-                  canvas.width = img.width;
-                  canvas.height = img.height;
-                  const ctx = canvas.getContext('2d');
-                  ctx.drawImage(img, 0, 0);
-                  canvas.toBlob(blob => {
-                      if (blob) resolve(blob);
-                      else reject(new Error("فشل نظام الضغط الاحتياطي"));
-                  }, 'image/jpeg', quality); // نحوله دائماً إلى JPEG لتوفير مساحة أكبر
-              };
-              img.onerror = error => reject(error);
-          };
-          reader.onerror = error => reject(error);
-      });
+  // ================= Pure JS Canvas Compressor (No External Libraries) =================
+  function compressImageNative(file, targetSizeMB = 1) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                
+                // خلفية بيضاء في حال كانت الصورة شفافة (PNG) ليتم تحويلها إلى JPEG
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+
+                const targetSize = targetSizeMB * 1024 * 1024;
+                let quality = 0.9;
+                const mimeType = 'image/jpeg'; // نستخدم JPEG لتقليل المساحة بقوة
+
+                function attemptCompress(q) {
+                    canvas.toBlob((blob) => {
+                        if (!blob) { reject(new Error('فشل نظام الضغط')); return; }
+                        if (blob.size <= targetSize || q <= 0.1) {
+                            resolve(blob);
+                        } else {
+                            attemptCompress(q - 0.1);
+                        }
+                    }, mimeType, q);
+                }
+                attemptCompress(quality);
+            };
+            img.onerror = () => reject(new Error('فشل قراءة الصورة للضغط'));
+        };
+        reader.onerror = () => reject(new Error('فشل قراءة الملف'));
+    });
   }
 
   // ================= Upload Logic =================
@@ -551,61 +573,58 @@
             document.getElementById(`status_${itemId}`).textContent = 'جاري الضغط...';
             
             try {
-                let compressedBlob = null;
-                
-                // المحاولة الأولى: استخدام المكتبة الخارجية
-                if (typeof imageCompression !== 'undefined') {
-                    const compOptions = { initialQuality: 0.8, useWebWorker: false, maxSizeMB: 1 };
-                    compressedBlob = await imageCompression(originalFile, compOptions);
-                } else {
-                    throw new Error("المكتبة غير متوفرة، سيتم استخدام النظام الاحتياطي");
-                }
-
-                if (compressedBlob && compressedBlob.size < originalFile.size) {
+                // استخدام محرك الضغط المدمج
+                const compressedBlob = await compressImageNative(originalFile, 1); // استهدف 1 ميجابايت كحد أقصى
+                if (compressedBlob.size < originalFile.size) {
                     fileToUpload = compressedBlob;
                     document.getElementById(`status_${itemId}`).textContent = `تم توفير ${Math.round((originalFile.size - fileToUpload.size) / 1024)}KB`;
                 } else {
                     fileToUpload = originalFile;
                     document.getElementById(`status_${itemId}`).textContent = `لم يتم تقليل الحجم`;
                 }
-
             } catch (compError) {
-                console.warn("Primary compression failed, using fallback:", compError);
-                // المحاولة الثانية: استخدام Canvas API المدمج في المتصفح
-                try {
-                    const fallbackBlob = await compressWithCanvas(originalFile, 0.7);
-                    if (fallbackBlob.size < originalFile.size) {
-                        fileToUpload = fallbackBlob;
-                        document.getElementById(`status_${itemId}`).textContent = `تم الضغط (احتياطي)`;
-                    } else {
-                        fileToUpload = originalFile;
-                        document.getElementById(`status_${itemId}`).textContent = `فشل التقليل`;
-                    }
-                } catch (fallbackError) {
-                    console.error("Fallback compression also failed:", fallbackError);
-                    fileToUpload = originalFile;
-                    document.getElementById(`status_${itemId}`).textContent = `تم رفع الأصلي (فشل الضغط)`;
-                }
+                console.warn("Compression failed, uploading original:", compError);
+                fileToUpload = originalFile;
+                document.getElementById(`status_${itemId}`).textContent = `فشل الضغط (رُفع الأصلي)`;
             }
         }
 
         document.getElementById(`status_${itemId}`).textContent = 'جاري الرفع...';
+        
+        // التحقق من حد حجم GitHub (100 ميجابايت)
+        if (fileToUpload.size > 25 * 1024 * 1024) {
+            throw new Error("حجم الملف يتجاوز 25 ميجابايت (الحد الأقصى للرفع عبر المتصفح).");
+        }
+
         const base64Data = await readFileAsBase64(fileToUpload);
         
-        // تحديد الامتداد بناءً على الملف الأصلي
-        const ext = originalFile.name.split('.').pop();
+        // تحديد الامتداد (إذا تم ضغطه سيصبح jpeg)
+        let ext = originalFile.name.split('.').pop();
+        if (fileToUpload.type === 'image/jpeg' && originalFile.type !== 'image/jpeg') {
+            ext = 'jpg'; // تم تحويله إلى jpg بواسطة نظام الضغط
+        }
+        
         const safeName = `img_${Date.now()}_${i}.${ext}`;
         const path = `images/${safeName}`;
 
         const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
+        
         const response = await fetch(apiUrl, {
           method: 'PUT',
-          headers: { 'Authorization': `token ${config.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+          headers: { 
+              'Authorization': `token ${config.token}`, 
+              'Accept': 'application/vnd.github.v3+json', 
+              'Content-Type': 'application/json' 
+          },
           body: JSON.stringify({ message: `Upload ${safeName}`, content: base64Data, branch: config.branch })
         });
 
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'فشل الرفع');
+        let data;
+        try { data = await response.json(); } catch (e) { data = {}; }
+
+        if (!response.ok) {
+            throw new Error(data.message || `خطأ غير معروف (كود ${response.status}). تأكد من صحة التوكن والفرع.`);
+        }
 
         const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${path}`;
         
@@ -622,6 +641,7 @@
         addToHistory(originalFile.name, jsdelivrUrl, data.content.path, data.content.sha);
 
       } catch (error) {
+        console.error(error);
         document.getElementById(`status_${itemId}`).textContent = 'فشل ✕';
         document.getElementById(`status_${itemId}`).className = 'result-status status-error';
         document.querySelector(`#${itemId} .link-input`).value = error.message;
