@@ -113,13 +113,12 @@
   .btn-sel-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
   .btn-sel-cancel { background: var(--bg); border: 1px solid var(--line); color: var(--text-2); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
 
-  /* هنا تم إضافة الـ 40px كمسافة سفلية دائمة */
   .sidebar-content { 
     flex: 1; 
     overflow-y: auto; 
     overflow-x: hidden; 
     padding: 15px; 
-    padding-bottom: 40px; /* تم إضافة هذا السطر فقط */
+    padding-bottom: 40px;
     -webkit-overflow-scrolling: touch; 
   }
 
@@ -464,6 +463,7 @@
     localStorage.setItem('gh_config', JSON.stringify(config));
     alert('تم حفظ الإعدادات بنجاح!');
     toggleConfig();
+    syncHistoryFromGitHub();
   }
   function loadConfig() {
     const saved = localStorage.getItem('gh_config');
@@ -681,7 +681,105 @@
   function saveHistory(history) {
     localStorage.setItem('es_top_history', JSON.stringify(history));
   }
-  
+
+  // ================= مزامنة السجل عبر GitHub =================
+  function utf8ToBase64(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+  function base64ToUtf8(b64) {
+    const binary = atob(b64.replace(/\s/g, ''));
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  // سحب السجل من GitHub عند فتح الصفحة
+  async function syncHistoryFromGitHub() {
+    const configStr = localStorage.getItem('gh_config');
+    if (!configStr) return;
+    try {
+      const config = JSON.parse(configStr);
+      if (!config.user || !config.repo || !config.token) return;
+
+      const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
+      const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+
+      if (res.status === 404) {
+        // لا يوجد ملف سجل على GitHub بعد — ارفع السجل المحلي إن وُجد
+        const local = getHistory();
+        if (local.length > 0) pushHistoryToGitHub(local, false);
+        return;
+      }
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const remoteHistory = JSON.parse(base64ToUtf8(data.content));
+      if (Array.isArray(remoteHistory)) {
+        saveHistory(remoteHistory);
+        renderHistory();
+      }
+    } catch (e) { console.warn('History sync failed', e); }
+  }
+
+  // دفع السجل إلى GitHub (مع دمج اختياري مع النسخة البعيدة)
+  async function pushHistoryToGitHub(localHistory, mergeWithRemote = true) {
+    const configStr = localStorage.getItem('gh_config');
+    if (!configStr) return;
+    try {
+      const config = JSON.parse(configStr);
+      if (!config.user || !config.repo || !config.token) return;
+
+      // جلب الـ SHA (والنسخة البعيدة إن وُجدت)
+      let sha = null;
+      let remoteHistory = [];
+      const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
+      const getRes = await fetch(getUrl, { headers: { 'Authorization': `token ${config.token}` } });
+      if (getRes.ok) {
+        const getData = await getRes.json();
+        sha = getData.sha;
+        try { remoteHistory = JSON.parse(base64ToUtf8(getData.content)); } catch(e) {}
+      }
+
+      // دمج (للإضافات) أو استبدال (للحذف)
+      let finalHistory = localHistory;
+      if (mergeWithRemote && Array.isArray(remoteHistory) && remoteHistory.length > 0) {
+        const map = new Map();
+        [...remoteHistory, ...localHistory].forEach(item => map.set(item.id, item));
+        finalHistory = Array.from(map.values()).sort((a, b) => b.id - a.id).slice(0, 50);
+        if (finalHistory.length !== localHistory.length) {
+          saveHistory(finalHistory);
+          renderHistory();
+        }
+      }
+
+      const body = {
+        message: `Update history ${new Date().toISOString()}`,
+        content: utf8ToBase64(JSON.stringify(finalHistory)),
+        branch: config.branch
+      };
+      if (sha) body.sha = sha;
+
+      const res = await fetch(`https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${config.token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) console.log('History synced to GitHub ✓');
+      else console.warn('History push failed', res.status);
+    } catch (e) { console.warn('History push error', e); }
+  }
+
   function addToHistory(name, url, path, sha) {
     const history = getHistory();
     history.unshift({ 
@@ -692,6 +790,7 @@
     if(history.length > 50) history.pop();
     saveHistory(history);
     renderHistory();
+    pushHistoryToGitHub(history, true); // مزامنة مع GitHub
   }
   
   function renderHistory() {
@@ -791,6 +890,7 @@
 
     const updatedHistory = history.filter(i => !idsToDelete.has(i.id));
     saveHistory(updatedHistory);
+    pushHistoryToGitHub(updatedHistory, false); // مزامنة الحذف مع GitHub
     
     if (isSelectionMode && btnSel) { btnSel.textContent = originalText; btnSel.disabled = false; }
     else if (btnClear) { btnClear.textContent = originalText; btnClear.disabled = false; }
@@ -824,6 +924,7 @@
   }
 
   renderHistory(); 
+  syncHistoryFromGitHub(); // جلب السجل المشترك من GitHub
 
   // ================= PDF =================
   function generatePDF(historyData, filenamePrefix) {
