@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ES TOP - مركز رفع الصور</title>
-<!-- مكتبة تصدير PDF فقط (مستقرة ولا تؤثر على الرفع) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
   :root{
@@ -27,8 +26,6 @@
     display:flex; flex-direction:column; transition:background .3s, color .3s;
     padding-top: 65px;
   }
-
-  /* ================= Header ================= */
   header {
     position: fixed; top: 0; left: 0; right: 0; height: 65px;
     background: var(--surface); border-bottom: 1px solid var(--line);
@@ -37,14 +34,12 @@
   }
   .header-right { justify-self: start; display: flex; gap: 10px; }
   .header-left { justify-self: end; display: flex; gap: 10px; }
-  
   .header-btn {
     background: var(--bg); border: 1px solid var(--line); color: var(--text);
     padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;
     display: flex; align-items: center; gap: 6px; transition: 0.2s;
   }
   .header-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(37,99,235,0.05); }
-  
   .theme-switch { position: relative; display: inline-block; width: 60px; height: 30px; }
   .theme-switch input { opacity: 0; width: 0; height: 0; }
   .slider {
@@ -64,7 +59,6 @@
   .icon-moon { color: #f8fafc; margin-right: 2px; opacity: 0.5;}
   input:checked + .slider .icon-sun { opacity: 0.5; }
   input:checked + .slider .icon-moon { opacity: 1; }
-
   .logo-area { display: flex; align-items: center; justify-content: center; }
   .logo-container {
     width: 45px; height: 45px; background: linear-gradient(135deg, var(--primary), var(--primary-2));
@@ -73,15 +67,12 @@
   }
   .logo-container:hover { transform: scale(1.05) rotate(-5deg); }
   .logo-img { width: 30px; height: 30px; object-fit: contain; }
-
-  /* ================= Sidebar (History) ================= */
   .sidebar-overlay {
     position: fixed; top: 65px; left: 0; right: 0; bottom: 0;
     background: rgba(0,0,0,0.5); z-index: 998;
     opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(3px);
   }
   .sidebar-overlay.show { opacity: 1; visibility: visible; }
-
   .sidebar {
     position: fixed; top: 65px; right: -450px; width: 100%; max-width: 420px; height: calc(100vh - 65px);
     background: var(--surface); z-index: 999;
@@ -90,14 +81,12 @@
     border-left: 1px solid var(--line);
   }
   .sidebar.show { right: 0; }
-
   .sidebar-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 15px 20px; border-bottom: 1px solid var(--line);
     background: var(--surface); min-height: 60px;
   }
   .sidebar-header h2 { font-size: 16px; font-weight: 800; color: var(--text); margin: 0; }
-  
   .normal-actions { display: flex; align-items: center; gap: 6px; }
   .btn-mini-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s; }
   .btn-mini-pdf:hover { background: #be123c; }
@@ -105,32 +94,22 @@
   .btn-mini-clear:hover { background: var(--red); color: #fff; }
   .sidebar-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; transition: 0.2s; padding: 0 5px; }
   .sidebar-close:hover { color: var(--red); }
-
   .selection-actions { display: none; align-items: center; gap: 6px; width: 100%; justify-content: space-between; }
   .selection-actions.active { display: flex; }
   .sel-count { font-size: 13px; font-weight: 800; color: var(--primary); }
   .btn-sel-delete { background: var(--red); color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
   .btn-sel-pdf { background: #e11d48; color: #fff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
   .btn-sel-cancel { background: var(--bg); border: 1px solid var(--line); color: var(--text-2); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
-
   .sidebar-content { 
-    flex: 1; 
-    overflow-y: auto; 
-    overflow-x: hidden; 
-    padding: 15px; 
-    padding-bottom: 40px;
+    flex: 1; overflow-y: auto; overflow-x: hidden; padding: 15px; padding-bottom: 40px;
     -webkit-overflow-scrolling: touch; 
   }
-
-  /* ================= Empty State ================= */
   .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 20px; animation: fadeIn 0.5s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .empty-state img { width: 160px; height: auto; margin-bottom: 20px; opacity: 0.8; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1)); }
   [data-theme="dark"] .empty-state img { opacity: 0.6; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)) invert(1); }
   .empty-state h3 { font-size: 18px; color: var(--text); margin-bottom: 10px; font-weight: 800; }
   .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 250px; }
-
-  /* ================= History Items ================= */
   .history-item {
     background: var(--bg); border: 1px solid var(--line);
     border-radius: 10px; padding: 10px; margin-bottom: 10px;
@@ -141,32 +120,26 @@
   }
   .history-item:hover { border-color: var(--primary-2); }
   .history-item.selected { border-color: var(--primary); background: rgba(37,99,235,0.05); box-shadow: 0 0 0 2px var(--primary); }
-
   .history-header { display: flex; justify-content: space-between; align-items: center; }
   .history-filename { font-size: 11px; font-weight: 700; color: var(--text-2); direction: ltr; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
   .history-date { font-size: 10px; color: var(--muted); }
-
   .history-link-group { display: flex; gap: 6px; align-items: center; }
-  
   .history-img-container {
     width: 44px; height: 44px; border-radius: 8px; overflow: hidden;
     flex-shrink: 0; border: 1px solid var(--line); cursor: pointer; background: var(--surface);
   }
   .history-img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
   .history-img-container:hover .history-img { transform: scale(1.15); }
-
   .history-link-input {
     flex: 1; padding: 8px 10px; border: 1px solid var(--line);
     border-radius: 6px; background: var(--surface); color: var(--text); font-size: 11px; direction: ltr;
     user-select: text; -webkit-user-select: text;
   }
-
   .action-buttons { display: flex; gap: 4px; }
   .btn-mini-copy { background: rgba(37,99,235,0.1); color: var(--primary); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 11px; }
   .btn-mini-copy:hover { background: var(--primary); color: #fff; }
   .btn-mini-delete { background: rgba(239,68,68,0.1); color: var(--red); border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; font-size: 11px; }
   .btn-mini-delete:hover { background: var(--red); color: #fff; }
-
   .selection-check {
     position: absolute; top: -5px; right: -5px; width: 20px; height: 20px;
     border-radius: 50%; background: var(--primary); color: #fff;
@@ -174,16 +147,12 @@
     box-shadow: var(--shadow-sm); z-index: 2;
   }
   .history-item.selected .selection-check { display: grid; }
-
-  /* ================= Main Container ================= */
   .main-wrapper { flex: 1; padding: 30px 20px; display: flex; justify-content: center; }
   .container {
     background: var(--surface); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 30px; width: 100%; max-width: 850px; box-shadow: var(--shadow-md);
   }
-
   h2.section-title { font-size: 16px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid var(--line); padding-bottom: 10px; }
-
   .config-section { background: var(--bg); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--line); }
   .config-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:13px; font-weight:700; color:var(--primary); }
   .config-body { display:none; margin-top:15px; gap:10px; flex-direction:column; }
@@ -193,22 +162,18 @@
   .input-group input { padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text); font-size:13px; }
   .input-group input:focus { outline:none; border-color:var(--primary); }
   .btn-save { background:var(--green); color:#fff; border:none; padding:10px; border-radius:8px; font-weight:700; cursor:pointer; margin-top:5px; }
-
   .compression-toggle { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; font-size: 13px; font-weight: 700; color: var(--text-2); cursor: pointer; background: rgba(37, 99, 235, 0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--primary-2); }
   .compression-toggle input { width: 18px; height: 18px; cursor: pointer; margin-top: 2px; }
   .compression-toggle .desc { font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 4px; display: block; }
-
   .drop-zone { border: 2px dashed var(--primary); border-radius: var(--radius); padding: 40px 20px; text-align: center; cursor: pointer; transition: all .2s; background: rgba(37, 99, 235, 0.02); }
   .drop-zone:hover, .drop-zone.dragover { background: rgba(37, 99, 235, 0.08); transform: scale(1.01); }
   .drop-zone .icon { font-size: 40px; margin-bottom: 10px; color: var(--primary); }
   .drop-zone .text { font-size: 15px; font-weight: 700; color: var(--text); }
   .drop-zone .hint { font-size: 12px; color: var(--muted); margin-top: 5px; }
-
   .overall-progress { display:none; margin-top:20px; padding:15px; background:var(--bg); border-radius:10px; }
   .progress-text { font-size:12px; font-weight:700; margin-bottom:8px; color:var(--text-2); }
   .progress-bar { height:6px; background:var(--line); border-radius:6px; overflow:hidden; }
   .progress-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--primary-2)); transition:width .3s; }
-
   .results-container { display:none; margin-top:20px; }
   .result-item { background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px; }
   .result-header { display:flex; justify-content:space-between; align-items:center; }
@@ -217,7 +182,6 @@
   .status-success { background:rgba(16,185,129,.1); color:var(--green); }
   .status-error { background:rgba(239,68,68,.1); color:var(--red); }
   .status-compressing { background:rgba(245,158,11,.1); color:#f59e0b; }
-
   .link-group { display:flex; gap:10px; align-items:center; }
   .img-preview-container { width:44px; height:44px; border-radius:8px; overflow:hidden; background:var(--line); flex-shrink:0; border:1px solid var(--line); cursor: pointer;}
   .img-preview-container img { width:100%; height:100%; object-fit:cover; transition: transform .3s; }
@@ -225,16 +189,13 @@
   .link-input { flex:1; padding:10px; border:1px solid var(--line); border-radius:8px; background:var(--surface); color:var(--text); font-size:13px; direction:ltr; }
   .btn-copy { background:var(--primary); color:#fff; border:none; padding:0 20px; border-radius:8px; cursor:pointer; font-weight:700; transition:.2s; font-size:13px; height:40px; }
   .btn-copy:hover { background:var(--primary-2); }
-
   footer { text-align: center; padding: 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--surface); margin-top: auto; }
   footer strong { color: var(--primary); }
-
   .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:2000; justify-content:center; align-items:center; opacity:0; transition:opacity .3s; backdrop-filter:blur(5px); }
   .modal-overlay.show { display:flex; opacity:1; }
   .modal-content { max-width:90%; max-height:90vh; border-radius:12px; object-fit:contain; transform:scale(.95); transition:transform .3s; }
   .modal-overlay.show .modal-content { transform:scale(1); }
   .modal-close { position:absolute; top:20px; right:20px; color:#fff; font-size:30px; cursor:pointer; background:none; border:none; }
-
   @media (max-width: 600px) {
     .header-btn .btn-text { display: none; } 
     .header-btn { padding: 8px 10px; }
@@ -409,7 +370,6 @@
   function selectItem(id) {
     if (selectedIds.has(id)) selectedIds.delete(id);
     else selectedIds.add(id);
-    
     if (selectedIds.size === 0) {
       toggleSelectionMode(false);
     } else {
@@ -491,23 +451,17 @@
                 canvas.width = img.width;
                 canvas.height = img.height;
                 const ctx = canvas.getContext('2d');
-                
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0);
-
                 const targetSize = targetSizeMB * 1024 * 1024;
                 let quality = 0.9;
                 const mimeType = 'image/jpeg';
-
                 function attemptCompress(q) {
                     canvas.toBlob((blob) => {
                         if (!blob) { reject(new Error('فشل نظام الضغط')); return; }
-                        if (blob.size <= targetSize || q <= 0.1) {
-                            resolve(blob);
-                        } else {
-                            attemptCompress(q - 0.1);
-                        }
+                        if (blob.size <= targetSize || q <= 0.1) resolve(blob);
+                        else attemptCompress(q - 0.1);
                     }, mimeType, q);
                 }
                 attemptCompress(quality);
@@ -577,7 +531,6 @@
         if (shouldCompress && originalFile.size > 200 * 1024) {
             progressText.textContent = `جاري ضغط ${i + 1} من ${totalFiles}...`;
             document.getElementById(`status_${itemId}`).textContent = 'جاري الضغط...';
-            
             try {
                 const compressedBlob = await compressImageNative(originalFile, 1);
                 if (compressedBlob.size < originalFile.size) {
@@ -601,15 +554,11 @@
         }
 
         const base64Data = await readFileAsBase64(fileToUpload);
-        
         let ext = originalFile.name.split('.').pop();
-        if (fileToUpload.type === 'image/jpeg' && originalFile.type !== 'image/jpeg') {
-            ext = 'jpg'; 
-        }
+        if (fileToUpload.type === 'image/jpeg' && originalFile.type !== 'image/jpeg') ext = 'jpg'; 
         
         const safeName = `img_${Date.now()}_${i}.${ext}`;
         const path = `images/${safeName}`;
-
         const apiUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${path}`;
         
         const response = await fetch(apiUrl, {
@@ -700,81 +649,168 @@
     return new TextDecoder().decode(bytes);
   }
 
-  // فحص مجلد images/ وبناء سجلات من أسماء الملفات
-  async function scanRepoImages(config) {
-    try {
-      const listUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/images?ref=${config.branch}`;
-      const res = await fetch(listUrl, { headers: { 'Authorization': `token ${config.token}` } });
-      if (!res.ok) return [];
-      const files = await res.json();
-      if (!Array.isArray(files)) return [];
-
-      const result = [];
-      files.forEach((file, idx) => {
-        if (file.type !== 'file') return;
-        if (!/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name)) return;
-
-        const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${file.path}`;
-
-        // استخراج وقت الرفع من اسم الملف img_TIMESTAMP_i.ext
-        let ts = null;
-        const m = file.name.match(/img_(\d+)_/);
-        if (m) ts = parseInt(m[1]);
-        const dateStr = ts ? new Date(ts).toLocaleString('ar-EG') : 'غير معروف';
-
-        result.push({
-          id: ts ? (ts + idx) : (Date.now() - idx),
-          name: file.name,
-          url: jsdelivrUrl,
-          path: file.path,
-          sha: file.sha,
-          date: dateStr
-        });
-      });
-      return result;
-    } catch (e) { console.warn('Scan images failed', e); return []; }
+  // قائمة ملفات مجلد معين (يرمي أخطاء واضحة)
+  async function listFolder(config, folderPath) {
+    const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/${folderPath}?ref=${config.branch}`;
+    const res = await fetch(url, { 
+      headers: { 
+        'Authorization': `token ${config.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      } 
+    });
+    
+    console.log(`[Sync] listFolder "${folderPath}" → status ${res.status}`);
+    
+    if (!res.ok) {
+      if (res.status === 404) return [];
+      if (res.status === 401) throw new Error('التوكن غير صالح أو منتهي (401)');
+      if (res.status === 403) throw new Error('التوكن لا يملك صلاحية الوصول (403)');
+      throw new Error(`GitHub API ${res.status} - ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    if (!Array.isArray(data)) {
+      console.warn(`[Sync] "${folderPath}" ليس مجلداً (قد يكون ملفاً)`);
+      return [];
+    }
+    return data.filter(item => item.type === 'file');
   }
 
-  // سحب السجل من GitHub + فحص مجلد الصور القديمة
+  // فحص مجلدات متعددة + معالجة الأخطاء
+  async function scanRepoImages(config) {
+    const folderPaths = ['images', 'Images', 'img', 'assets/images'];
+    let allFiles = [];
+    let foundIn = null;
+    
+    for (const folder of folderPaths) {
+      try {
+        const files = await listFolder(config, folder);
+        if (files.length > 0) {
+          console.log(`[Sync] ✓ وجدت ${files.length} ملف في "${folder}"`);
+          allFiles = files;
+          foundIn = folder;
+          break;
+        }
+      } catch (e) {
+        console.warn(`[Sync] فشل فحص "${folder}":`, e.message);
+        // إذا كان الخطأ مصادقة، ارمِه فوراً لأن المسارات الأخرى ستفشل أيضاً
+        if (e.message.includes('401') || e.message.includes('403') || e.message.includes('صلاحية')) {
+          throw e;
+        }
+      }
+    }
+    
+    if (allFiles.length === 0) {
+      console.warn('[Sync] لم يتم العثور على أي مجلد صور معروف');
+      return [];
+    }
+    
+    // فلترة الصور فقط
+    const imageFiles = allFiles.filter(f => /\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(f.name));
+    console.log(`[Sync] صور صالحة في "${foundIn}": ${imageFiles.length}/${allFiles.length}`);
+    
+    return imageFiles.map((file, idx) => {
+      const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${file.path}`;
+      let ts = null;
+      const m = file.name.match(/img_(\d+)_/);
+      if (m) ts = parseInt(m[1]);
+      const dateStr = ts ? new Date(ts).toLocaleString('ar-EG') : 'غير معروف';
+      return {
+        id: ts ? (ts + idx) : (Date.now() - idx),
+        name: file.name,
+        url: jsdelivrUrl,
+        path: file.path,
+        sha: file.sha,
+        date: dateStr
+      };
+    });
+  }
+
+  // سحب السجل من GitHub + فحص الصور القديمة (مع شريط حالة مرئي)
   async function syncHistoryFromGitHub() {
     const configStr = localStorage.getItem('gh_config');
-    if (!configStr) return;
+    if (!configStr) { console.log('[Sync] لا توجد إعدادات محفوظة'); return; }
+    
+    const list = document.getElementById('historyList');
+    if (!list) return;
+    
+    // شريط الحالة
+    document.getElementById('syncStatus')?.remove();
+    const statusEl = document.createElement('div');
+    statusEl.id = 'syncStatus';
+    statusEl.style.cssText = 'padding:8px 12px;margin-bottom:10px;background:rgba(37,99,235,0.1);border-radius:8px;font-size:11px;text-align:center;color:var(--primary);font-weight:700;';
+    statusEl.textContent = '🔄 جاري المزامنة مع GitHub...';
+    list.parentElement.insertBefore(statusEl, list);
+    
     try {
       const config = JSON.parse(configStr);
-      if (!config.user || !config.repo || !config.token) return;
-
+      if (!config.user || !config.repo || !config.token) {
+        console.warn('[Sync] الإعدادات غير مكتملة');
+        statusEl.textContent = '⚠️ الإعدادات غير مكتملة';
+        statusEl.style.background = 'rgba(239,68,68,0.1)';
+        statusEl.style.color = 'var(--red)';
+        setTimeout(() => statusEl.remove(), 3000);
+        renderHistory();
+        return;
+      }
+      
+      console.log(`[Sync] بدء المزامنة: ${config.user}/${config.repo}@${config.branch}`);
+      
       // 1) جلب history.json إن وُجد
       let remoteHistory = [];
-      const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
-      const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-      if (res.ok) {
-        const data = await res.json();
-        try { remoteHistory = JSON.parse(base64ToUtf8(data.content)); } catch(e) {}
-        if (!Array.isArray(remoteHistory)) remoteHistory = [];
-      }
-
-      // 2) فحص مجلد images/ لالتقاط الصور القديمة
+      try {
+        const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
+        const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
+        console.log(`[Sync] history.json → status ${res.status}`);
+        if (res.ok) {
+          const data = await res.json();
+          try { 
+            remoteHistory = JSON.parse(base64ToUtf8(data.content)); 
+            if (!Array.isArray(remoteHistory)) remoteHistory = [];
+          } catch(e) { console.warn('[Sync] فشل تحليل history.json', e); }
+        }
+        console.log(`[Sync] عدد عناصر history.json: ${remoteHistory.length}`);
+      } catch (e) { console.warn('[Sync] خطأ جلب history.json:', e); }
+      
+      // 2) فحص مجلد الصور
       const scannedImages = await scanRepoImages(config);
-
-      // 3) دمج الكل (بدون تكرار عبر الـ url)
+      
+      // 3) دمج الكل (بدون تكرار عبر url)
       const map = new Map();
       [...remoteHistory, ...getHistory(), ...scannedImages].forEach(item => {
         if (item && item.url) map.set(item.url, item);
       });
       const merged = Array.from(map.values())
         .sort((a, b) => b.id - a.id)
-        .slice(0, 200);
-
+        .slice(0, 300);
+      
+      console.log(`[Sync] الإجمالي بعد الدمج: ${merged.length} (محلي: ${getHistory().length}، بعيد: ${remoteHistory.length}، مفحوص: ${scannedImages.length})`);
+      
       saveHistory(merged);
       renderHistory();
-
-      // 4) ارفع النسخة المدموجة إلى GitHub ليراها الجميع
-      if (merged.length > 0) pushHistoryToGitHub(merged, false);
-
-    } catch (e) { console.warn('History sync failed', e); }
+      
+      // 4) ارفع النسخة المدموجة (بخلفية، دون تعطيل العرض)
+      if (merged.length > 0) {
+        pushHistoryToGitHub(merged, false).catch(e => console.warn('[Sync] فشل الحفظ البعيد:', e));
+      }
+      
+      // شريط النجاح
+      statusEl.textContent = `✓ تمت المزامنة — ${merged.length} صورة (${scannedImages.length} مفحوصة من المجلد)`;
+      statusEl.style.background = 'rgba(16,185,129,0.1)';
+      statusEl.style.color = 'var(--green)';
+      setTimeout(() => statusEl.remove(), 5000);
+      
+    } catch (e) {
+      console.error('[Sync] فشل كامل:', e);
+      statusEl.textContent = '⚠️ ' + e.message;
+      statusEl.style.background = 'rgba(239,68,68,0.1)';
+      statusEl.style.color = 'var(--red)';
+      setTimeout(() => statusEl.remove(), 8000);
+      renderHistory();
+    }
   }
 
-  // دفع السجل إلى GitHub (مع دمج اختياري مع النسخة البعيدة)
+  // دفع السجل إلى GitHub
   async function pushHistoryToGitHub(localHistory, mergeWithRemote = true) {
     const configStr = localStorage.getItem('gh_config');
     if (!configStr) return;
@@ -782,7 +818,6 @@
       const config = JSON.parse(configStr);
       if (!config.user || !config.repo || !config.token) return;
 
-      // جلب الـ SHA (والنسخة البعيدة إن وُجدت)
       let sha = null;
       let remoteHistory = [];
       const getUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
@@ -793,12 +828,11 @@
         try { remoteHistory = JSON.parse(base64ToUtf8(getData.content)); } catch(e) {}
       }
 
-      // دمج (للإضافات) أو استبدال (للحذف)
       let finalHistory = localHistory;
       if (mergeWithRemote && Array.isArray(remoteHistory) && remoteHistory.length > 0) {
         const map = new Map();
         [...remoteHistory, ...localHistory].forEach(item => map.set(item.id, item));
-        finalHistory = Array.from(map.values()).sort((a, b) => b.id - a.id).slice(0, 50);
+        finalHistory = Array.from(map.values()).sort((a, b) => b.id - a.id).slice(0, 300);
         if (finalHistory.length !== localHistory.length) {
           saveHistory(finalHistory);
           renderHistory();
@@ -822,9 +856,9 @@
         body: JSON.stringify(body)
       });
 
-      if (res.ok) console.log('History synced to GitHub ✓');
-      else console.warn('History push failed', res.status);
-    } catch (e) { console.warn('History push error', e); }
+      if (res.ok) console.log('[Sync] ✓ تم رفع history.json');
+      else console.warn('[Sync] فشل رفع history.json:', res.status);
+    } catch (e) { console.warn('[Sync] خطأ رفع history.json:', e); }
   }
 
   function addToHistory(name, url, path, sha) {
@@ -834,7 +868,7 @@
         name, url, path, sha,  
         date: new Date().toLocaleString('ar-EG') 
     });
-    if(history.length > 50) history.pop();
+    if(history.length > 300) history.pop();
     saveHistory(history);
     renderHistory();
     pushHistoryToGitHub(history, true);
@@ -849,7 +883,7 @@
         <div class="empty-state">
           <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" alt="Empty History">
           <h3>السجل فارغ</h3>
-          <p>لم تقم برفع أي صور حتى الآن.<br>قم بسحب وإفلات الصور في الأداة لتظهر هنا.</p>
+          <p>اضغط زر <b>🔄 مزامنة</b> بالأعلى لفحص الصور القديمة في المستودع.</p>
         </div>
       `;
       return;
@@ -864,14 +898,11 @@
            onmouseup="cancelPress()" onmouseleave="cancelPress()"
            ontouchstart="startPress(event, ${item.id})"
            ontouchend="cancelPress()">
-        
         <div class="selection-check">✓</div>
-        
         <div class="history-header">
           <span class="history-filename">${item.name}</span>
           <span class="history-date">${item.date}</span>
         </div>
-        
         <div class="history-link-group">
           <div class="history-img-container" onclick="event.stopPropagation(); openModal('${item.url}')">
             <img src="${item.url}" class="history-img" alt="${item.name}">
@@ -891,11 +922,9 @@
     const history = getHistory();
     const configStr = localStorage.getItem('gh_config');
     let config = null;
-    
     if (configStr) config = JSON.parse(configStr);
 
     let deletedCount = 0;
-    
     const btnSel = document.querySelector('.btn-sel-delete');
     const btnClear = document.getElementById('btnClear');
     let originalText = '';
@@ -944,9 +973,7 @@
     
     toggleSelectionMode(false);
     
-    if (idsToDelete.size > 1) {
-        alert(`تم حذف ${deletedCount} صورة بنجاح.`);
-    }
+    if (idsToDelete.size > 1) alert(`تم حذف ${deletedCount} صورة بنجاح.`);
   }
 
   async function deleteSingleImage(id) {
@@ -964,17 +991,16 @@
     const history = getHistory();
     if(history.length === 0) return;
     if(!confirm('⚠️ تنبيه هام:\nهل أنت متأكد من مسح السجل بالكامل؟\nسيتم حذف جميع الصور نهائياً من مستودع GitHub أيضاً!')) return;
-
     const allIds = new Set(history.map(i => i.id));
     await performDelete(allIds);
     alert('تم مسح السجل بالكامل.');
   }
 
-  // إعادة الفحص اليدوي (للصور القديمة)
+  // إعادة الفحص اليدوي
   async function manualRescan(ev) {
     const btn = ev.currentTarget;
     const old = btn.textContent;
-    btn.textContent = '... جاري الفحص';
+    btn.textContent = '⏳';
     btn.disabled = true;
     await syncHistoryFromGitHub();
     btn.textContent = old;
