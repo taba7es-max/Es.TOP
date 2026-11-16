@@ -272,6 +272,7 @@
     <div id="normalHeader" style="display:flex; justify-content:space-between; width:100%; align-items:center;">
       <h2>📜 السجل</h2>
       <div class="normal-actions">
+        <button class="btn-mini-pdf" onclick="manualRescan(event)" title="فحص الصور القديمة">🔄 مزامنة</button>
         <button class="btn-mini-pdf" onclick="exportPDF()">PDF</button>
         <button class="btn-mini-clear" id="btnClear" onclick="clearHistory()">مسح الكل</button>
         <button class="sidebar-close" onclick="toggleSidebar()">✕</button>
@@ -699,7 +700,42 @@
     return new TextDecoder().decode(bytes);
   }
 
-  // سحب السجل من GitHub عند فتح الصفحة
+  // فحص مجلد images/ وبناء سجلات من أسماء الملفات
+  async function scanRepoImages(config) {
+    try {
+      const listUrl = `https://api.github.com/repos/${config.user}/${config.repo}/contents/images?ref=${config.branch}`;
+      const res = await fetch(listUrl, { headers: { 'Authorization': `token ${config.token}` } });
+      if (!res.ok) return [];
+      const files = await res.json();
+      if (!Array.isArray(files)) return [];
+
+      const result = [];
+      files.forEach((file, idx) => {
+        if (file.type !== 'file') return;
+        if (!/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(file.name)) return;
+
+        const jsdelivrUrl = `https://cdn.jsdelivr.net/gh/${config.user}/${config.repo}@${config.branch}/${file.path}`;
+
+        // استخراج وقت الرفع من اسم الملف img_TIMESTAMP_i.ext
+        let ts = null;
+        const m = file.name.match(/img_(\d+)_/);
+        if (m) ts = parseInt(m[1]);
+        const dateStr = ts ? new Date(ts).toLocaleString('ar-EG') : 'غير معروف';
+
+        result.push({
+          id: ts ? (ts + idx) : (Date.now() - idx),
+          name: file.name,
+          url: jsdelivrUrl,
+          path: file.path,
+          sha: file.sha,
+          date: dateStr
+        });
+      });
+      return result;
+    } catch (e) { console.warn('Scan images failed', e); return []; }
+  }
+
+  // سحب السجل من GitHub + فحص مجلد الصور القديمة
   async function syncHistoryFromGitHub() {
     const configStr = localStorage.getItem('gh_config');
     if (!configStr) return;
@@ -707,23 +743,34 @@
       const config = JSON.parse(configStr);
       if (!config.user || !config.repo || !config.token) return;
 
+      // 1) جلب history.json إن وُجد
+      let remoteHistory = [];
       const url = `https://api.github.com/repos/${config.user}/${config.repo}/contents/history.json?ref=${config.branch}`;
       const res = await fetch(url, { headers: { 'Authorization': `token ${config.token}` } });
-
-      if (res.status === 404) {
-        // لا يوجد ملف سجل على GitHub بعد — ارفع السجل المحلي إن وُجد
-        const local = getHistory();
-        if (local.length > 0) pushHistoryToGitHub(local, false);
-        return;
+      if (res.ok) {
+        const data = await res.json();
+        try { remoteHistory = JSON.parse(base64ToUtf8(data.content)); } catch(e) {}
+        if (!Array.isArray(remoteHistory)) remoteHistory = [];
       }
-      if (!res.ok) return;
 
-      const data = await res.json();
-      const remoteHistory = JSON.parse(base64ToUtf8(data.content));
-      if (Array.isArray(remoteHistory)) {
-        saveHistory(remoteHistory);
-        renderHistory();
-      }
+      // 2) فحص مجلد images/ لالتقاط الصور القديمة
+      const scannedImages = await scanRepoImages(config);
+
+      // 3) دمج الكل (بدون تكرار عبر الـ url)
+      const map = new Map();
+      [...remoteHistory, ...getHistory(), ...scannedImages].forEach(item => {
+        if (item && item.url) map.set(item.url, item);
+      });
+      const merged = Array.from(map.values())
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 200);
+
+      saveHistory(merged);
+      renderHistory();
+
+      // 4) ارفع النسخة المدموجة إلى GitHub ليراها الجميع
+      if (merged.length > 0) pushHistoryToGitHub(merged, false);
+
     } catch (e) { console.warn('History sync failed', e); }
   }
 
@@ -790,7 +837,7 @@
     if(history.length > 50) history.pop();
     saveHistory(history);
     renderHistory();
-    pushHistoryToGitHub(history, true); // مزامنة مع GitHub
+    pushHistoryToGitHub(history, true);
   }
   
   function renderHistory() {
@@ -890,7 +937,7 @@
 
     const updatedHistory = history.filter(i => !idsToDelete.has(i.id));
     saveHistory(updatedHistory);
-    pushHistoryToGitHub(updatedHistory, false); // مزامنة الحذف مع GitHub
+    pushHistoryToGitHub(updatedHistory, false);
     
     if (isSelectionMode && btnSel) { btnSel.textContent = originalText; btnSel.disabled = false; }
     else if (btnClear) { btnClear.textContent = originalText; btnClear.disabled = false; }
@@ -923,8 +970,19 @@
     alert('تم مسح السجل بالكامل.');
   }
 
+  // إعادة الفحص اليدوي (للصور القديمة)
+  async function manualRescan(ev) {
+    const btn = ev.currentTarget;
+    const old = btn.textContent;
+    btn.textContent = '... جاري الفحص';
+    btn.disabled = true;
+    await syncHistoryFromGitHub();
+    btn.textContent = old;
+    btn.disabled = false;
+  }
+
   renderHistory(); 
-  syncHistoryFromGitHub(); // جلب السجل المشترك من GitHub
+  syncHistoryFromGitHub();
 
   // ================= PDF =================
   function generatePDF(historyData, filenamePrefix) {
